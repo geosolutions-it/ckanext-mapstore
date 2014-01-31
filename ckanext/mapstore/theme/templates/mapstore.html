@@ -1,0 +1,15 @@
+{% extends "dataviewer/base.html" %}
+
+{% block page %}
+
+    <div data-module="mapstorepreview" id="mapstore-preview">
+		<h4 class="loading-dialog">
+		  <div class="loading-spinner"></div>
+		  <div class="left">{{ _('Loading...') }}</div>
+		</h4>
+    </div>
+	
+	{% resource 'ckanext-mapstore/main' %}
+
+{% endblock %}
+
