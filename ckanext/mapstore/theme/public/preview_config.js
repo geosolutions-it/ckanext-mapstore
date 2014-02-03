@@ -1,6 +1,6 @@
 var preview_config = {
-	viewerConfigName: "viewerConfig",
-	viewerPath: "mapcomposer/viewer",
-	composerPath: "mapcomposer/composer",
-    mapStoreBaseURL: "http://mapstore.geo-solutions.it/"
+	viewerConfigName: "preview",
+	viewerPath: "/viewer",
+	composerPath: "/composer",
+    mapStoreBaseURL: "http://localhost:8080/mapstore"
 }
