@@ -171,7 +171,7 @@ class GeoStoreHarvester(HarvesterBase):
 				'author': '',
 				'maintainer': '',
 				'maintainer_email': '',
-				'tags': ['mapstore', 'wms', resource_content['name']],
+				'tags': ['mapstore', resource_content['name']],
 				'license_id': '',
 				'extras':{
 					'creation': resource_content['creation']
