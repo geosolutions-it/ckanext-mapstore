@@ -80,7 +80,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 						
 			$("#mapstore-preview").append($("<iframe></iframe>").attr("id", "mapstore-ifame"));
 			$("#mapstore-ifame").attr("style", "border: none;");
-			$("#mapstore-ifame").attr("height", "450");
+			$("#mapstore-ifame").attr("height", "500");
 			$("#mapstore-ifame").attr("width", "100%");
 			$("#mapstore-ifame").attr("src", src);
 			
