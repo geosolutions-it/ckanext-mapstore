@@ -58,8 +58,8 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			var config = preview_config;
 			var mapstoreBaseURL = config.mapStoreBaseURL;
 			
-			var viewerURLParams = this.buildUrlParams("viewer", capabilitiesUrl, resource);
-			var composerURLParams = this.buildUrlParams("composer", capabilitiesUrl, resource);
+			var viewerURLParams = this.buildUrlParams("viewer", capabilitiesUrl, resource, url);
+			var composerURLParams = this.buildUrlParams("composer", capabilitiesUrl, resource, url);
 								
 			if(resource.format == "wms"){
 				var keyValue = resource.name + "," + capabilitiesUrl;
@@ -91,7 +91,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			}
         },
 		
-		buildUrlParams: function(template, capabilitiesUrl, resource){
+		buildUrlParams: function(template, capabilitiesUrl, resource, url){
 			var config = preview_config;
 			var URLParams = [];		
 						
@@ -113,6 +113,8 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 				if(capabilitiesUrl && resource){
 					URLParams.push("wmsurl=" + capabilitiesUrl);
 					URLParams.push("layName=" + resource.name);
+				}else{
+					URLParams.push("mapId=" + url.split("=")[1]);
 				}
 				
 				URLParams.push("langSelector=false");
