@@ -24,7 +24,7 @@ addToBasket = function(keyValue){
 		var layerName = keyValue.split(",")[0];
 		$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + keyValue + "'><div class='show-btn'><a class='show show-secondary removeBtn' onClick=\"javascript:removeFromBasket('" + keyValue + "')\">Remove</a><br/></div>" + layerName + "</li>"));
 		
-		updateComposerSrc(true);
+		showButton("basketButton");
 	}
 }
 
@@ -76,10 +76,20 @@ removeFromBasket = function(keyValue){
 		//
 		var basketListChilds = $("#basketlist").children();
 		if(basketListChilds.length < 1){
-			$("#basket").prepend($("<p>No elements selected</p>"));
-			updateComposerSrc(false);
+			$("#basket").prepend($("<p>No elements selected</p>"));			
+			hideButton("basketButton");
 		}	
 	}
+}
+
+function hideButton(elementId){
+	var srcElement = $("#" + elementId);
+	var srcValue = srcElement.attr("style", "display: none;");
+}
+
+function showButton(elementId){
+	var srcElement = $("#" + elementId);
+	var srcValue = srcElement.attr("style", "display: visible;");
 }
 
 function createCookie(name, value, days) {
@@ -111,8 +121,8 @@ function eraseCookie(name) {
 	createCookie(name, "", -1);
 }
 
-function updateComposerSrc(useCookies){
-	var srcElement = $("#showInTab");
+function updateComposerSrc(useCookies, anchorId){
+	var srcElement = $("#" + anchorId);
 	var srcValue = srcElement.attr("href");
 	
 	var search = srcValue.split("?")[1];
@@ -171,5 +181,5 @@ function updateComposerSrc(useCookies){
 	
 	var config = preview_config;
 	var newSrc = config.mapStoreBaseURL + config.composerPath + "?" + newSrc;
-	$("#showInTab").attr("href", newSrc);
+	$("#" + anchorId).attr("href", newSrc);
 }

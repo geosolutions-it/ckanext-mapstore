@@ -57,18 +57,31 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			// //////////////////////////////////////////////////
 			var config = preview_config;
 			var mapstoreBaseURL = config.mapStoreBaseURL;
-			
-			var viewerURLParams = this.buildUrlParams("viewer", capabilitiesUrl, resource, url);
-			var composerURLParams = this.buildUrlParams("composer", capabilitiesUrl, resource, url);
-								
+					
 			if(resource.format == "wms"){
 				var keyValue = resource.name + "," + capabilitiesUrl;
-				$("#mapstore-preview").append($("<div style='padding-left:20px;' class='show-btn'><a class='show show-secondary' onClick=\"javascript:addToBasket('" + keyValue + "')\">Add To Basket</a><br/></div>"));
+				$("#mapstore-preview").append($("<div style='padding-left:10px;' class='show-btn'><a class='show show-secondary' onClick=\"javascript:addToBasket('" + keyValue + "')\">Add To Basket</a><br/></div>"));
 			}
 			
-			var src =  "'" + mapstoreBaseURL + config.composerPath + "?" + composerURLParams.join("&") + "'";
+			// //////////////////////////////////////
+			// Set URL in show layers basket button
+			// //////////////////////////////////////
+			var basketURLParams = this.buildUrlParams("basket", null, null, null);
+			var src = mapstoreBaseURL + config.composerPath + "?" + basketURLParams.join("&");
+		    var srcElement = $("#showBasket");
+	        var srcValue = srcElement.attr("href", src);
+			
+			// ////////////////////////////////////////////
+			// Set URL in basic show map button (composer)
+			// ////////////////////////////////////////////
+			var composerURLParams = this.buildUrlParams("composer", capabilitiesUrl, resource, url);
+			src =  "'" + mapstoreBaseURL + config.composerPath + "?" + composerURLParams.join("&") + "'";
 			$("#mapstore-preview").append($("<div class='show-btn'><a id='showInTab' class='show show-primary' href=" + src + " target='_blank'>Show Map in a new Tab</a><br/></div>"));
 			
+		    // ///////////////////////////////////////////////////////
+			// Set URL for the embedded preview and build the iframe
+			// ///////////////////////////////////////////////////////
+			var viewerURLParams = this.buildUrlParams("viewer", capabilitiesUrl, resource, url);
 			src = mapstoreBaseURL + config.viewerPath + "?" + viewerURLParams.join("&");
 						
 			$("#mapstore-preview").append($("<iframe></iframe>").attr("id", "mapstore-ifame"));
@@ -92,6 +105,33 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
         },
 		
 		buildUrlParams: function(template, capabilitiesUrl, resource, url){
+			var config = preview_config;
+			var URLParams = [];		
+						
+			URLParams.push("locale=en");                // TODO: link to the Ckan locale ???
+			
+			if(template == "viewer" || template == "composer"){
+				if(capabilitiesUrl && resource){
+					URLParams.push("wmsurl=" + capabilitiesUrl);
+					URLParams.push("layName=" + resource.name);
+				}else{
+					URLParams.push("mapId=" + url.split("=")[1]);
+				}
+			}
+			
+			if(template == "viewer"){
+				URLParams.push("langSelector=false");
+				URLParams.push("config=" + config.viewerConfigName);
+			}
+			
+			if(template == "basket"){
+				URLParams.push("useCookies=true");
+			}
+			
+			return URLParams;
+		},
+		
+		/*buildUrlParams: function(template, capabilitiesUrl, resource, url){
 			var config = preview_config;
 			var URLParams = [];		
 						
@@ -122,7 +162,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			}
 			
 			return URLParams;
-		},
+		},*/
 		
 		buildBasketList: function(){
 				var existingCookieValue = readCookie("layersList");
@@ -145,6 +185,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 					var basket = $("#basket");
 					var basketFirstChild = $("#basket").children()[0];
 					basketFirstChild.remove();
+					showButton("basketButton");
 				}		
 		},
 		
