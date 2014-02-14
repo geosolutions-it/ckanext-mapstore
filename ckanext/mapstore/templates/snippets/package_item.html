@@ -61,21 +61,28 @@ Example:
 
 	{% if package.resources and not hide_resources %}
 	  <ul class="dataset-resources unstyled" style="float: right; display: inline-block;">
-		{% for resource in h.dict_list_reduce(package.resources, 'format') %}
-			{% set url = h.dict_list_reduce(package.resources, 'url')[0] %}
-			{% set name = h.dict_list_reduce(package.resources, 'name')[0] %}
-			{% set format = h.dict_list_reduce(package.resources, 'format')[0] %}
-			{% set id = h.dict_list_reduce(package.resources, 'id')[0] %}
-			
-			{% if resource == 'wms' %}
-				  <li>
-					<a id="cart-{{ id }}" href="#" onClick="javascript:basket_utils.prepareKeyForBasket(this.id, &#34;{{url}}&#34;, &#34;{{name}}&#34;, &#34;{{format}}&#34;);" class="label basket-label-cart"><i class="icon-shopping-cart"></i><spam> Add to Cart</spam></a>
-				  </li>
+		{% set index = 0 %}
+		{% for resource in h.dict_list_reduce(package.resources, 'format') %}			
+			{% if resource == 'wms' or resource == 'mapstore' %}
+				
+				{% set url = h.dict_list_reduce(package.resources, 'url')[index] %}
+				{% set name = h.dict_list_reduce(package.resources, 'name')[index] %}
+				{% set format = h.dict_list_reduce(package.resources, 'format')[index] %}
+				{% set id = h.dict_list_reduce(package.resources, 'id')[index] %}
+				
+				{% if resource == 'wms'%}
+					<li>
+						<a id="cart-{{ id }}" onClick="javascript:basket_utils.prepareKeyForBasket(this.id, &#34;{{url}}&#34;, &#34;{{name}}&#34;, &#34;{{format}}&#34;);" class="label basket-label-cart"><i class="icon-shopping-cart"></i><spam> Add to Cart</spam></a>
+					</li>
+				{% endif %}
+				
+				<li>
+					<a id="{{ id }}" onClick="javascript:basket_utils.preparePreviewURL(&#34;{{id}}&#34;, &#34;{{url}}&#34;, &#34;{{name}}&#34;, &#34;{{format}}&#34;);" class="label basket-label-preview"><i class="icon-map-marker"></i><spam> Preview on Map</spam></a>
+				</li>
+
 			{% endif %}
 			
-			<li>
-				<a id="{{ id }}" href="#" onClick="javascript:basket_utils.preparePreviewURL(&#34;{{id}}&#34;, &#34;{{url}}&#34;, &#34;{{name}}&#34;, &#34;{{format}}&#34;);" class="label basket-label-preview"><i class="icon-map-marker"></i><spam> Preview on Map</spam></a>
-			</li>
+			{% set index = index + 1 %}
 		{% endfor %}
 	  </ul>
 	{% endif %}

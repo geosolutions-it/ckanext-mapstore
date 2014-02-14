@@ -1,0 +1,26 @@
+
+{% resource 'ckanext-mapstore/basket' %}
+{% resource 'ckanext-mapstore/utils' %}
+
+<section class="module module-narrow module-shallow">
+	<div data-module="basket" id="basket-container">
+		<div id="basket-header" style="display: none;">
+			<a class="facet-kill pull-right" id="shopping-basket-reset" onClick="javascript:basket_utils.hideBasket('shopping-basket-container', 'basket-header', true)">
+				<i class="icon-large icon-remove-sign"></i>
+			</a>
+			<a class="facet-kill pull-right" id="shopping-basket-collapse" onClick="javascript:basket_utils.hideBasket('shopping-basket-container', 'basket-header', false)">
+				<i class="icon-large icon-minus"></i>
+			</a>
+			
+			<h4 class="facet-title">Map Preview List</h4>
+		</div>
+
+		<div class="facet-box-unboxed" id="shopping-basket-container" style="display: none;">
+		  <ul id='basketlist' class='list-group'></ul>
+		  <br/>
+		  <div id="basketButton" class="basket-button">
+				<a id="showBasket" class='btn' href="#" target='_blank'>Show Layers</a>
+		  </div>
+		</div>
+	</div>
+</section>

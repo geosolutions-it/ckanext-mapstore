@@ -19,7 +19,6 @@ var basket_utils = {
 	
 	prepareKeyForBasket: function(id, url, name, format){
 		var capabilitiesUrl = this.getCapabilitiesURL(url);
-		//var keyValue = id + "," + name + "," + capabilitiesUrl;		
 		var keyValue = "{\"id\":\"" + id + "\", \"layer\":\"" + name + "\", \"wms\":\"" + capabilitiesUrl + "\"}";
 		keyValue = escape(keyValue);
 		
@@ -143,11 +142,13 @@ var basket_utils = {
 		if(keyValue){
 			var basketListChilds = $("#basketlist").children();
 
-			//var keys = keyValue.split(",");	
 			var keys = unescape(keyValue);
 			keys = $.parseJSON(keys);
 			
 			var layerName = keys.layer;
+			if(layerName.indexOf(":") != -1){
+				layerName = layerName.split(":")[1];
+			}
 			
 			$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + keyValue + "'/><a onClick=\"javascript:basket_utils.removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
 			

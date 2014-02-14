@@ -45,6 +45,9 @@ this.ckan.module('basket', function (jQuery, _) {
 						keys = $.parseJSON(keys);
 						
 						var layerName = keys.layer;
+						if(layerName.indexOf(":") != -1){
+							layerName = layerName.split(":")[1];
+						}
 						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + keyValue + "'/><a onClick=\"javascript:basket_utils.removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
 						
 						//
