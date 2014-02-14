@@ -1,30 +1,6 @@
-/*body {
-        width: 500px;
-}*/
-
-h2{
-	color: #505050;
-	font-family: 'Helvetica Neue',Helvetica,Arial,sans-seri
-}
-
-p{
-    color: #444444;
-    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
-    font-size: 14px;
-    line-height: 20px;
-}
-
-#basketContainer{
-	height: 200px;
-	overflow: auto;
-}
 
 #mapstore-preview{
 	margin: 0 auto;
-}
-
-.ckanext-datapreview > iframe {
-    min-height: 820px;
 }
 
 .show{
@@ -51,10 +27,6 @@ p{
 	text-align: center;
 	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
 	vertical-align: middle;
-}
-
-.removeBtn{
-	padding: 0px 0px;
 }
 
 .show-primary {
@@ -88,23 +60,4 @@ a {
 	float: right;
 	margin-bottom:10px;
 }
-
-.list-group-item:first-child {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.list-group-item {
-  background-color: #FFFFFF;
-  border: 1px solid #DDDDDD;
-  display: block;
-  margin-bottom: -1px;
-  padding: 10px 15px;
-  position: relative;
-  color: #444444;
-  font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
-  font-size: 14px;
-  line-height: 20px;
-}
-
 

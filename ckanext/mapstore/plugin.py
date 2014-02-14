@@ -23,9 +23,9 @@ class MapStorePlugin(plugins.SingletonPlugin):
         ''' Set up the resource library, public directory and
      	   template directory for the preview
         '''
-	plugins.toolkit.add_public_directory(config, 'theme/public')
-        plugins.toolkit.add_template_directory(config, 'theme/templates')
-        plugins.toolkit.add_resource('theme/public', 'ckanext-mapstore')
+	plugins.toolkit.add_public_directory(config, 'public')
+        plugins.toolkit.add_template_directory(config, 'templates')
+        plugins.toolkit.add_resource('preview', 'ckanext-mapstore')
 
     def can_preview(self, data_dict):
         resource = data_dict['resource']
