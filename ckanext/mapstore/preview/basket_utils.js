@@ -6,31 +6,103 @@ var basket_utils = {
 	
 	basketCollapseButtonId: "shopping-basket-collapse",
 	
-	preparePreviewURL: function(id, url, name, format){
-		var capabilitiesUrl = this.getCapabilitiesURL(url);
+	/**
+	 * Prepare the URL for mapstore preview (maps from geostore)
+	 */
+	preparePreviewURL: function(resource_list){		
+		for(var i=0; i<resource_list.length; i++){
+			var resource = resource_list[i];
+			var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
+			
+			var URLParams = this.buildUrlParams("simple", capabilitiesUrl, resource.name, resource.url);		
+			
+			var config = preview_config;
+			var href = config.mapStoreBaseURL + config.composerPath + "?" + URLParams.join("&");
+			
+			window.open(href);
+		}
+	},
+	
+	/**
+	 * Build the single cookie
+	 */
+	prepareKey: function(resource){
+		var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
+		var keyValue = "{\"package_id\":\"" + resource.package_id + "\", \"id\":\"" + resource.id + "\", \"layer\":\"" + resource.name + "\", \"wms\":\"" + capabilitiesUrl + "\"}";
+		keyValue = escape(keyValue);
 		
-		var URLParams = this.buildUrlParams("preview", capabilitiesUrl, name, url);		
+		return keyValue;		
+	},
+	
+	/**
+	 * Add a new element to teh basket div
+	 */	
+	addToBasket: function(resource_list, package_id){		
+		for(var i=0; i<resource_list.length; i++){
+			var resource = resource_list[i];				
+			var keyValue = this.prepareKey(resource);			
+			this._addToBasket(keyValue, resource_list);
+		}
 		
+		//
+		// Change the cart style and OnClick method for remove and show the basket component
+		//
+		var cartId = package_id;
+		var cartButton = $("#" + cartId);
+		cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
+		
+		this.setCartButtonStyle(cartId, true);		
+		this.showBasket(this.basketContainerId, this.basketHeaderId);
+	},
+
+	/**
+	 * Remove ad element from the basket div
+	 */	
+	removeFromBasket: function(resource_list, package_id){
+		for(var i=0; i<resource_list.length; i++){
+			var resource = resource_list[i];				
+			var keyValue = this.prepareKey(resource);			
+			this._removeFromBasket(keyValue);
+		}
+	},
+
+	/**
+	 * Manages the direct preview call (from the dataset list page) for WMS resources
+	 */	
+	previewOnMap: function(resource_list){
+		this.eraseCookie("previewList");
+		
+		for(var i=0; i<resource_list.length; i++){
+			var resource = resource_list[i];	
+		    var key = this.prepareKey(resource);
+			var keyValue = this.preparePreviewOnMapCookie(key);			
+		}
+		
+		var URLParams = this.buildUrlParams("preview");
 		var config = preview_config;
 		var href = config.mapStoreBaseURL + config.composerPath + "?" + URLParams.join("&");
 		
-		window.open(href);
+		window.open(href);				
 	},
-	
-	prepareKeyForBasket: function(id, url, name, format){
-		var capabilitiesUrl = this.getCapabilitiesURL(url);
-		var keyValue = "{\"id\":\"" + id + "\", \"layer\":\"" + name + "\", \"wms\":\"" + capabilitiesUrl + "\"}";
-		keyValue = escape(keyValue);
-		
-		var cartButton = $("#" + id);
-		var cartClass = cartButton.attr("class");
-		if(cartClass == "label basket-label-cart-red"){
-			this.removeFromBasket(keyValue);
+
+	/**
+	 * Build the cookie for the direct WMS preview (from the dataset list page)
+	 */	
+	preparePreviewOnMapCookie: function(keyValue){
+		var existingCookieValue = this.readCookie("previewList");
+
+		if(existingCookieValue && existingCookieValue != ""){
+			existingCookieValue += "#" + keyValue;
+			this.eraseCookie("previewList");
+			this.createCookie("previewList", existingCookieValue, null);
 		}else{
-			this.addToBasket(keyValue);
-		}	
+			this.createCookie("previewList", keyValue, null);
+		}
 	},
-	
+
+	/**
+	 * Parse the WMS GetCapabilities URL 
+	 */
 	getCapabilitiesURL: function(url){
 		var wmsUrl, capabilitiesUrl;
 		if(url.indexOf('mapId') == -1){
@@ -40,26 +112,34 @@ var basket_utils = {
 		
 		return capabilitiesUrl;
 	},
-	
+
+	/**
+	 * Build URL params for preview URLs
+	 */	
 	buildUrlParams: function(template, capabilitiesUrl, name, url){
 		var URLParams = [];		
 		
 		URLParams.push("locale=en");                // TODO: link to the Ckan locale ???
 		
-		if(template == "preview"){
+		if(template == "simple"){
 			if(capabilitiesUrl && name){
 				URLParams.push("wmsurl=" + capabilitiesUrl);
 				URLParams.push("layName=" + name);
 			}else{
 				URLParams.push("mapId=" + url.split("=")[1]);
 			}
-		}else{
-			URLParams.push("useCookies=true");
+		}else if(template == "preview"){
+			URLParams.push("useCookies=previewList");
+		}else if(template == "basket"){
+			URLParams.push("useCookies=layersList");
 		}
 		
 		return URLParams;
 	},
 
+	/**
+	 * Hide the basket div removing the content if remove = true
+	 */
 	hideBasket: function(elementId, headerId, remove){		
 		if(remove === true){
 			//
@@ -84,7 +164,7 @@ var basket_utils = {
 			//
 			// Remove all elements from the basket
 			//
-			this.removeFromBasket('all');
+			this._removeFromBasket('all');
 		}else{
 			var element = $("#" + elementId);
 			var collapse = $("#" + this.basketCollapseButtonId);
@@ -117,6 +197,9 @@ var basket_utils = {
 		}
 	},
 
+	/**
+	 * Shows teh Basket div
+	 */
 	showBasket: function(elementId, headerId){
 		var element = $("#" + headerId);
 		element.attr("style", "display: block;");
@@ -124,7 +207,10 @@ var basket_utils = {
 		element.attr("style", "display: block;");
 	},
 
-	addToBasket: function(keyValue){
+	/**
+	 * Private method to add element to the basket. It manages the list of sub element
+	 */
+	_addToBasket: function(keyValue, resource_list){
 		var existingCookieValue = this.readCookie("layersList");
 		
 		if(existingCookieValue && existingCookieValue != ""){
@@ -150,19 +236,15 @@ var basket_utils = {
 				layerName = layerName.split(":")[1];
 			}
 			
-			$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + keyValue + "'/><a onClick=\"javascript:basket_utils.removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
-			
-			//
-			// Change the cart style and show the basket component
-			//
-			var cartId = keys.id;
-			this.setCartButton(cartId, false);
-			
-			this.showBasket(this.basketContainerId, this.basketHeaderId);
+			$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + JSON.stringify(resource_list) + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
 		}
 	},
 
-	removeFromBasket: function(keyValue){
+	/**
+	 * Private method to remove element from the basket. It manages the list of sub element
+	 * and the keys coockie control to enable/disable teh cart button from the dataset list 
+	 */
+	_removeFromBasket: function(keyValue){
 		var existingCookieValue = this.readCookie("layersList");
 		
 		if(existingCookieValue && existingCookieValue != ""){
@@ -182,37 +264,50 @@ var basket_utils = {
 					var basketListChilds = $("#basketlist").children();
 					for(var k=0; k<basketListChilds.length; k++){
 						var child = basketListChilds[k];
-						var inputHiddenValue = child.children[0].value;
 						
-					    var hiddenKeys = unescape(inputHiddenValue);
-						hiddenKeys = $.parseJSON(hiddenKeys);	
+					    // Hidden resource list to restore
+						var hiddenResourceList = child.children[0].value;						
 						
-						var cartId;
+						// Hidden package_id
+						var hiddenKeys = child.children[1].value;
+						var hidden_package_id = hiddenKeys.split(",")[0];
+						var hidden_resource_id = hiddenKeys.split(",")[1];
+					
 						if(keyValue != 'all'){
 							var keys = unescape(keyValue);
-							keys = $.parseJSON(keys);							
-														
-							var hidenLayerName = hiddenKeys.layer;
-							var hiddenWMS = hiddenKeys.wms;
+							keys = $.parseJSON(keys);
 							
-							var layerName = keys.layer;
-							var wms = keys.wms;
-							
-							if(hidenLayerName == layerName && hiddenWMS == wms){
+							var resource_id = keys.id;
+							if(resource_id == hidden_resource_id){
+								var package_id = keys.package_id;
+								if(this.checkIfLast(package_id)){
+									//
+									// Revert the related cart button to the original state
+									//	
+									var cartId = "cart-" + package_id;
+									var cartButton = $("#" + cartId);
+									cartButton.attr("onClick", "javascript:basket_utils.addToBasket(" + hiddenResourceList + ", '" + cartId + "');");
+									
+									this.setCartButtonStyle(cartId, false);	
+								}
+								
 								$(child).remove();
-							}	
-
-							cartId = keys.id;							
+							}
 						}else{
-							cartId = hiddenKeys.id;							
+							if(this.checkIfLast(hidden_package_id)){
+								//
+								// Revert the related cart button to the original state
+								//	
+								var cartId = "cart-" + hidden_package_id;
+								var cartButton = $("#" + cartId);
+								cartButton.attr("onClick", "javascript:basket_utils.addToBasket(" + hiddenResourceList + ", '" + cartId + "');");
+								
+								this.setCartButtonStyle(cartId, false);	
+							}			
+							
 							$(child).remove();
 						}
-						
-						//
-						// Revert the cart button to the original state
-						//						
-						this.setCartButton(cartId, true);	
-					}
+					}	
 				}
 			}
 			
@@ -233,20 +328,47 @@ var basket_utils = {
 			}	
 		}
 	},
-	
-	setCartButton: function(cartId, pressed){
+
+	/**
+	 * Check if an element is the last for a certain package inside the basket list. this is used in order to reset 
+	 * the cart button CSS to teh origin one before the remove operation.
+	 */	
+	checkIfLast: function(package_id){
+		var basketListChilds = $("#basketlist").children();
+		
+		var index = 0;
+		for(var k=0; k<basketListChilds.length; k++){
+			var child = basketListChilds[k];
+			
+			// Hidden package_id
+		    var hiddenKey = child.children[1].value.split(",")[0];	
+			if(hiddenKey == package_id){
+				index++;
+			}
+		}
+		
+		return index == 1 ? true : false;
+	},
+
+	/**
+	 * Change the cart button style (toggle)
+	 */	
+	setCartButtonStyle: function(cartId, pressed){
 		var cartButton = $("#" + cartId);
 		cartButton.empty();
 		
 		if(pressed){
-			cartButton.attr("class", "label basket-label-cart");
-			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Add to Cart</spam>"));
-		}else{
 			cartButton.attr("class", "label basket-label-cart-red");
 			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Remove from Cart</spam>"));
+		}else{
+			cartButton.attr("class", "label basket-label-cart");
+			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Add to Cart</spam>"));
 		}
 	},
 
+	/**
+	 * Creates the cookie
+	 */
 	createCookie: function(name, value, days) {
 		if (days) {
 			var date = new Date();
@@ -263,6 +385,9 @@ var basket_utils = {
 		document.cookie = name + "=" + value + expires + "; path=/";
 	},
 
+    /**
+	 * Read a cookie
+	 */
 	readCookie: function(name) {
 		var nameEQ = name + "=";
 		var ca = document.cookie.split(';');
@@ -275,7 +400,10 @@ var basket_utils = {
 		
 		return null;
 	},
-
+	
+	/**
+	 * Delete a cookie
+	 */
 	eraseCookie: function (name) {
 		this.createCookie(name, "", -1);
 	}

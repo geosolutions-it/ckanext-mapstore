@@ -1,7 +1,5 @@
 import ckan.plugins as plugins
-#import ckan.plugins.toolkit as toolkit
-
-
+	
 class MapStorePlugin(plugins.SingletonPlugin):
 
     """This extension previews MapStore based
@@ -15,6 +13,7 @@ class MapStorePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IConfigurable, inherit=True)
     plugins.implements(plugins.IResourcePreview, inherit=True)
+    plugins.implements(plugins.ITemplateHelpers)
 
     MAPSTORE_FORMATS = ['wms', 'mapstore']
 
@@ -44,9 +43,13 @@ class MapStorePlugin(plugins.SingletonPlugin):
     def preview_template(self, context, data_dict):
         return 'mapstore.html'
 
+    def get_helpers(self):
 
-
-
+        from ckanext.mapstore import helpers as mapstore_helpers
+        return {
+                'get_wms_list': mapstore_helpers.get_wms_list,
+		'get_mapstore_list': mapstore_helpers.get_mapstore_list,
+ 	       }
 
 
 

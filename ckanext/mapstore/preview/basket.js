@@ -24,7 +24,7 @@ this.ckan.module('basket', function (jQuery, _) {
 			//
 			// Set the show layers button
 			//
-			var basketURLParams = basket_utils.buildUrlParams();
+			var basketURLParams = basket_utils.buildUrlParams("basket");
 			var src = config.mapStoreBaseURL + config.composerPath + "?" + basketURLParams.join("&");
 			var srcElement = $("#showBasket");
 			var srcValue = srcElement.attr("href", src);
@@ -48,18 +48,31 @@ this.ckan.module('basket', function (jQuery, _) {
 						if(layerName.indexOf(":") != -1){
 							layerName = layerName.split(":")[1];
 						}
-						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + keyValue + "'/><a onClick=\"javascript:basket_utils.removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
+						
+						//
+						// Take the resource list from the hidden input of cart button
+						//
+						var cart = $("#cart-" + keys.package_id );
+						
+						if(!this.hidden_resource_list){
+							this.hidden_resource_list = cart.children()[0].value;
+						}						
+						
+						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + this.hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
 						
 						//
 						// Change the cart style and show the basket component
 						//
-						var cartId = keys.id;
+						var cartId = "cart-" + keys.package_id;
 						var cartButton = $("#" + cartId);
 						cartButton.attr("class", "label basket-label-cart-red");
+						cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + this.hidden_resource_list + ", '" + cartId + "');");
 						cartButton.empty();
 						cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Remove from Cart</spam>"));
 					}
 				}
+				
+				this.hidden_resource_list = null;
 			}
 			
 			if(this.checkForElementsInBasket()){
