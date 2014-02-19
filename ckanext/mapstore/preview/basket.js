@@ -53,26 +53,34 @@ this.ckan.module('basket', function (jQuery, _) {
 						// Take the resource list from the hidden input of cart button
 						//
 						var cart = $("#cart-" + keys.package_id );
-						
-						if(!this.hidden_resource_list){
-							this.hidden_resource_list = cart.children()[0].value;
+						var hidden_resource_list;
+						if(cart && cart.children()[0]){
+							hidden_resource_list = cart.children()[0].value;
 						}						
 						
-						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + this.hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
+						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
 						
 						//
 						// Change the cart style and show the basket component
 						//
 						var cartId = "cart-" + keys.package_id;
 						var cartButton = $("#" + cartId);
-						cartButton.attr("class", "label basket-label-cart-red");
-						cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + this.hidden_resource_list + ", '" + cartId + "');");
-						cartButton.empty();
-						cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Remove from Cart</spam>"));
+						if(cartButton){
+							cartButton.attr("class", "label basket-label-cart-red");
+							cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + hidden_resource_list + ", '" + cartId + "');");
+							
+							var cartIconId = "cart-icon-" + keys.package_id;
+							var cartIconButton = $("#" + cartIconId);	
+
+							if(cartIconButton){
+								cartIconButton.empty();						
+								cartIconButton.append($("<i class='icon-shopping-cart'></i> <spam>Remove from Cart</spam>"));
+							}	
+						}
+
+						//this.hidden_resource_list = null;
 					}
-				}
-				
-				this.hidden_resource_list = null;
+				}			
 			}
 			
 			if(this.checkForElementsInBasket()){

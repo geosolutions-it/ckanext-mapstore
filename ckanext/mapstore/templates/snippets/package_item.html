@@ -67,7 +67,7 @@ Example:
 			<li>
 				<a id="cart-{{ package.id }}" onClick="javascript:basket_utils.addToBasket({{ wms_layer_list }}, this.id);" class="label basket-label-cart">
 					<input type='hidden' value="{{ wms_layer_list }}"/>
-					<i class="icon-shopping-cart"></i><spam> Add to Cart</spam>
+					<div id="cart-icon-{{ package.id }}"><i class="icon-shopping-cart"></i><spam> Add to Cart</spam></div>
 				</a>
 			</li>
 			
