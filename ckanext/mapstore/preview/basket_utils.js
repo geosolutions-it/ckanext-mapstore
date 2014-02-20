@@ -105,7 +105,7 @@ var basket_utils = {
 	 */
 	getCapabilitiesURL: function(url){
 		var wmsUrl, capabilitiesUrl;
-		if(url.indexOf('mapId') == -1){
+		if(url.indexOf('data') == -1){
 			wmsUrl = mapstore_utils.cleanUrl(url);
 			capabilitiesUrl = mapstore_utils.getCapabilitiesUrl(wmsUrl);
 		}
@@ -126,12 +126,34 @@ var basket_utils = {
 				URLParams.push("wmsurl=" + capabilitiesUrl);
 				URLParams.push("layName=" + name);
 			}else{
-				URLParams.push("mapId=" + url.split("=")[1]);
+				var pattern = /(.+:\/\/)?([^\/]+)(\/.*)*/i;
+				var mHost = pattern.exec(url);
+				
+				URLParams.push("gsturl=" + encodeURIComponent(mHost[1] + mHost[2] + "/geostore/rest/"));
+				URLParams.push("mapId=" + url.split("data/")[1]);
 			}
 		}else if(template == "preview"){
 			URLParams.push("useCookies=previewList");
 		}else if(template == "basket"){
 			URLParams.push("useCookies=layersList");
+		}
+		
+		if(template == "basket" || template == "preview"){
+			var config = preview_config;
+			var backgroundData = config.backgroundData;
+			
+			if(backgroundData){
+				var baseMapId = backgroundData.baseMapId;			
+			
+				if(baseMapId){
+					URLParams.push("mapId=" + baseMapId);
+					var geostoreBaseUrl = encodeURIComponent(backgroundData.geostoreBaseUrl);
+				
+					if(geostoreBaseUrl){
+						URLParams.push("gsturl=" + geostoreBaseUrl);
+					}
+				}
+			}	
 		}
 		
 		return URLParams;
