@@ -186,15 +186,15 @@ class GeoStoreHarvester(HarvesterBase):
             		package_dict['id'] = unicode(uuid.uuid4()) #harvest_object.guid
 
             		# Save reference to the package on the object
-            		harvest_object.package_id = package_dict['id']
-            		harvest_object.add()
+            		#harvest_object.package_id = package_dict['id']
+            		#harvest_object.add()
 
                         # We need to get the owner organization (if any) from the harvest
                         # source dataset
-                        #source_dataset = model.Package.get(harvest_object.source.id)
-                        #if source_dataset.owner_org:
-                        #        log.info('Dataset Organization is: %s' % source_dataset.owner_org)
-                        #        package_dict['owner_org'] = source_dataset.owner_org
+                        source_dataset = model.Package.get(harvest_object.source.id)
+                        if source_dataset.owner_org:
+                                log.info('Dataset Organization is: %s' % source_dataset.owner_org)
+                                package_dict['owner_org'] = source_dataset.owner_org
 
             		package_dict['name'] = self._gen_new_name(package_dict['title'])
 		
