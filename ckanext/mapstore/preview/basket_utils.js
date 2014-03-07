@@ -28,7 +28,7 @@ var basket_utils = {
 	 */
 	prepareKey: function(resource){
 		var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
-		var keyValue = "{\"package_id\":\"" + resource.package_id + "\", \"id\":\"" + resource.id + "\", \"layer\":\"" + resource.name + "\", \"wms\":\"" + capabilitiesUrl + "\"}";
+		var keyValue = "{\"verified\":\"" + resource.verified + "\", \"package_id\":\"" + resource.package_id + "\", \"id\":\"" + resource.id + "\", \"layer\":\"" + resource.name + "\", \"wms\":\"" + capabilitiesUrl + "\"}";
 		keyValue = escape(keyValue);
 		
 		return keyValue;		
@@ -37,22 +37,34 @@ var basket_utils = {
 	/**
 	 * Add a new element to teh basket div
 	 */	
-	addToBasket: function(resource_list, package_id){		
+	addToBasket: function(resource_list, package_id){
+		var styleChanged = false;
 		for(var i=0; i<resource_list.length; i++){
 			var resource = resource_list[i];				
 			var keyValue = this.prepareKey(resource);			
-			this._addToBasket(keyValue, resource_list);
+			var status = this._addToBasket(keyValue, resource_list);
+			
+			if(!styleChanged && status === true){
+				// /////////////////////////////////////////////////////
+				// Calculate the existing cookie dimension. The 
+				// dimension could not exceeded the 4096 bytes.
+				// /////////////////////////////////////////////////////
+				var existingCookieValue = this.readCookie("layersList");
+				var dim = existingCookieValue.length;
+				if(dim <= 4096){
+					//
+					// Change the cart style and OnClick method for remove and show the basket component
+					//
+					var cartId = package_id;
+					var cartButton = $("#" + cartId);
+					cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
+					
+					this.setCartButtonStyle(cartId, true);		
+					this.showBasket(this.basketContainerId, this.basketHeaderId);
+					styleChanged = true;
+				}
+			}
 		}
-		
-		//
-		// Change the cart style and OnClick method for remove and show the basket component
-		//
-		var cartId = package_id;
-		var cartButton = $("#" + cartId);
-		cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
-		
-		this.setCartButtonStyle(cartId, true);		
-		this.showBasket(this.basketContainerId, this.basketHeaderId);
 	},
 
 	/**
@@ -234,11 +246,22 @@ var basket_utils = {
 	 */
 	_addToBasket: function(keyValue, resource_list){
 		var existingCookieValue = this.readCookie("layersList");
+		var cookieSize = 0;
 		
 		if(existingCookieValue && existingCookieValue != ""){
-			existingCookieValue += "#" + keyValue;
-			this.eraseCookie("layersList");
-			this.createCookie("layersList", existingCookieValue, null);
+			// /////////////////////////////////////////////////////
+			// Calculate the existing cookie dimension. The 
+			// dimension could not exceeded the 4096 bytes.
+			// /////////////////////////////////////////////////////
+			var dim = (existingCookieValue + "#" + keyValue).length;
+			if(dim > 4096){
+				cookieSize = dim;
+			}else{
+				cookieSize = dim;
+				existingCookieValue += "#" + keyValue;
+				this.eraseCookie("layersList");
+				this.createCookie("layersList", existingCookieValue, null);
+			}		
 		}else{
 			this.createCookie("layersList", keyValue, null);
 		}
@@ -247,7 +270,7 @@ var basket_utils = {
 		// Create the HTML element into the Basket list
 		// //////////////////////////////////////////////
 		
-		if(keyValue){
+		if(keyValue && cookieSize <= 4096){
 			var basketListChilds = $("#basketlist").children();
 
 			var keys = unescape(keyValue);
@@ -258,7 +281,18 @@ var basket_utils = {
 				layerName = layerName.split(":")[1];
 			}
 			
-			$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + JSON.stringify(resource_list) + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign'></i></div>" + layerName + "</a></li>"));	
+			if(keys.verified == 'True'){
+				// resource verified OK during the harvest process
+				$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + JSON.stringify(resource_list) + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>" + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
+			}else{
+				// resource verified NOT RUNNING during the harvest process
+				$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + JSON.stringify(resource_list) + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>" + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
+			}
+			
+			return true;
+		}else{
+			alert("Cookie dimension exceeded. Too much elements inside the basket");
+			return false;
 		}
 	},
 

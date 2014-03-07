@@ -22,6 +22,7 @@ def get_wms_list(package):
                                 'id':     item.get('id'),
                                 'url':    item.get('url'),
                                 'name':   item.get('name'),
+				'verified': item.get('verified'),
                                 'format': format
                         }
 

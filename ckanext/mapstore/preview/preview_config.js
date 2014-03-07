@@ -1,6 +1,6 @@
 var preview_config = {
 	viewerConfigName: "preview",
-	viewerPath: "/viewer",
+	viewerPath: "/embedded",
 	composerPath: "/composer",
-    mapStoreBaseURL: "http://192.168.1.114/mapstore"
+    mapStoreBaseURL: "http://localhost:8080/mapstore"
 }
