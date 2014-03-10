@@ -291,7 +291,7 @@ var basket_utils = {
 			
 			return true;
 		}else{
-			alert("Cookie dimension exceeded. Too much elements inside the basket");
+			alert("Cookie dimension exceeded. Too many elements inside the basket");
 			return false;
 		}
 	},
