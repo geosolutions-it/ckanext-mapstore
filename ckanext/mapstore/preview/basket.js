@@ -58,14 +58,20 @@ this.ckan.module('basket', function (jQuery, _) {
 							hidden_resource_list = cart.children()[0].value;
 						}					
 
-						if(keys.verified == 'True'){
-							// resource verified OK during the harvest process
-							$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div> " + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
-						}else{
-							// resource verified NOT RUNNING during the harvest process
-							$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/><div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div> " + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
+						var config = preview_config;
+						var icon = "";
+						if(config.basketStatus === true){
+							if(keys.verified == 'True'){
+								// resource verified OK during the harvest process
+								icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
+							}else{
+								// resource verified NOT RUNNING during the harvest process
+								icon = "<div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>";
+							}
 						}
 						
+						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/>" + icon + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
+
 						//
 						// Change the cart style and show the basket component
 						//
