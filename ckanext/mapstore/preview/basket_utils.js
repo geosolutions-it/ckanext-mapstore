@@ -50,18 +50,20 @@ var basket_utils = {
 				// dimension could not exceeded the 4096 bytes.
 				// /////////////////////////////////////////////////////
 				var existingCookieValue = this.readCookie("layersList");
-				var dim = existingCookieValue.length;
-				if(dim <= 4096){
-					//
-					// Change the cart style and OnClick method for remove and show the basket component
-					//
-					var cartId = package_id;
-					var cartButton = $("#" + cartId);
-					cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
-					
-					this.setCartButtonStyle(cartId, true);		
-					this.showBasket(this.basketContainerId, this.basketHeaderId);
-					styleChanged = true;
+				if(existingCookieValue){
+					var dim = existingCookieValue.length;
+					if(dim <= 3712){
+						//
+						// Change the cart style and OnClick method for remove and show the basket component
+						//
+						var cartId = package_id;
+						var cartButton = $("#" + cartId);
+						cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
+						
+						this.setCartButtonStyle(cartId, true);		
+						this.showBasket(this.basketContainerId, this.basketHeaderId);
+						styleChanged = true;
+					}
 				}
 			}
 		}
@@ -253,7 +255,7 @@ var basket_utils = {
 			// dimension could not exceeded the 4096 bytes.
 			// /////////////////////////////////////////////////////
 			var dim = (existingCookieValue + "#" + keyValue).length;
-			if(dim > 4096){
+			if(dim > 3712){
 				cookieSize = dim;
 			}else{
 				cookieSize = dim;
@@ -269,7 +271,7 @@ var basket_utils = {
 		// Create the HTML element into the Basket list
 		// //////////////////////////////////////////////
 		
-		if(keyValue && cookieSize <= 4096){
+		if(keyValue && cookieSize <= 3712){
 			var basketListChilds = $("#basketlist").children();
 
 			var keys = unescape(keyValue);
@@ -296,7 +298,7 @@ var basket_utils = {
 
 			return true;
 		}else{
-			alert("Cookie dimension exceeded. Too many elements inside the basket");
+			alert("Cookie dimension exceeded. Some items may not have been added to the cart.");
 			return false;
 		}
 	},
