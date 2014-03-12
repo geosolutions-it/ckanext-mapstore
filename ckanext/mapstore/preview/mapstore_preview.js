@@ -52,9 +52,8 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 		 */
 		getCapabilitiesURL: function(url){
 			var wmsUrl, capabilitiesUrl;
-			if(url.indexOf('data') == -1){
-				wmsUrl = mapstore_utils.cleanUrl(url);
-				capabilitiesUrl = mapstore_utils.getCapabilitiesUrl(wmsUrl);
+			if(url.indexOf('geostore') == -1){
+				capabilitiesUrl = mapstore_utils.getCapabilitiesUrl(url);
 			}
 			
 			return capabilitiesUrl;
