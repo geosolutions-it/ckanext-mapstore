@@ -3,5 +3,7 @@ var preview_config = {
 	viewerPath: "/embedded",
 	composerPath: "/composer",
     mapStoreBaseURL: "http://localhost:8080/mapstore",
-	basketStatus: false
+	basketStatus: false,
+	storageMethod: "sessionstorage",
+	forceLocaleTo: "it"
 }

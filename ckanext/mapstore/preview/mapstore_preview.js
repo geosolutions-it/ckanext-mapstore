@@ -5,6 +5,12 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 	return{
 		options: {
 			i18n: {
+				en:{
+					showMapInNewTabBtn: "Show in Advanced Viewer"
+				},
+				it:{
+					showMapInNewTabBtn: "Mostra in Visualizzatore Avanzato"
+				}
 			}
 		},
 
@@ -14,6 +20,8 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 		},
 
 		_onReady: function() {
+			this.setI18N(preview_config.forceLocaleTo || ckan.i18n.defaults.locale_data.messages[""].lang || "en");
+			
 			var resource = preload_resource;
 			var url = resource.url;
 			
@@ -32,7 +40,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			// ////////////////////////////////////////////
 			var composerURLParams = this.buildUrlParams("composer", capabilitiesUrl, resource, url);
 			var src =  "'" + mapstoreBaseURL + config.composerPath + "?" + composerURLParams.join("&") + "'";
-			$("#mapstore-preview").append($("<div class='show-btn'><a id='showInTab' class='show show-primary' href=" + src + " target='_blank'>Show Map in a new Tab</a><br/></div>"));
+			$("#mapstore-preview").append($("<div class='show-btn'><a id='showInTab' class='show show-primary' href=" + src + " target='_blank'>" + this.msgs.showMapInNewTabBtn + "</a><br/></div>"));
 			
 		    // ///////////////////////////////////////////////////////
 			// Set URL for the embedded preview and build the iframe
@@ -46,6 +54,11 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			$("#mapstore-ifame").attr("width", "100%");
 			$("#mapstore-ifame").attr("src", src);
         },
+		
+		setI18N: function(locale){
+			this.msgs = eval("this.options.i18n." + locale);
+			this.locale = locale;
+		},
 		
 		/**
 		 * Parse the WMS GetCapabilities URL 
@@ -63,7 +76,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			var config = preview_config;
 			var URLParams = [];		
 						
-			URLParams.push("locale=en");                // TODO: link to the Ckan locale ???
+			URLParams.push("locale=" + this.locale);                // TODO: link to the Ckan locale ???
 			
 			if(template == "viewer" || template == "composer"){
 				if(capabilitiesUrl && resource){

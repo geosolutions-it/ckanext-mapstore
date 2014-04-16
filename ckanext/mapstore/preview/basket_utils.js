@@ -1,10 +1,40 @@
+
 var basket_utils = {
 	
-	basketContainerId:"shopping-basket-container", 
+	basketContainerId: "shopping-basket-container", 
 	
 	basketHeaderId: "basket-header",
 	
 	basketCollapseButtonId: "shopping-basket-collapse",
+	
+	storeSize: 3712,
+	
+	/**i18n: null,*/
+	
+	/**locale: null,*/
+	
+	postToMapStore: function(src, singlePreview){
+		var basketButton = $("#basketButton");
+		
+		var storeValue;
+		if(singlePreview === true){
+			storeValue = this.readStore("previewList");
+		}else{
+			storeValue = this.readStore("layersList");
+		}
+		
+		var msForm = $("#msForm");
+		if(msForm){
+			msForm.remove();
+		}
+		
+		basketButton.append($("<form id=\"msForm\" action='' target=\"submission\" onsubmit=\"window.open('',this.target);return true;\" method=\"post\"><input type=\"hidden\" name=\"data\" value=\"" + storeValue + "\"></form>"));
+		
+		msForm = $("#msForm");
+		msForm.attr("action", src);		
+		
+		msForm.submit();	
+	},
 	
 	/**
 	 * Prepare the URL for mapstore preview (maps from geostore)
@@ -14,17 +44,15 @@ var basket_utils = {
 			var resource = resource_list[i];
 			var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
 			
-			var URLParams = this.buildUrlParams("simple", capabilitiesUrl, resource.name, resource.url);		
-			
-			var config = preview_config;
-			var href = config.mapStoreBaseURL + config.composerPath + "?" + URLParams.join("&");
+			var URLParams = this.buildUrlParams("simple", capabilitiesUrl, resource.name, resource.url);			
+			var href = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + URLParams.join("&");
 			
 			window.open(href);
 		}
 	},
 	
 	/**
-	 * Build the single cookie
+	 * Build the single store for resource
 	 */
 	prepareKey: function(resource){
 		var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
@@ -49,10 +77,10 @@ var basket_utils = {
 				// Calculate the existing cookie dimension. The 
 				// dimension could not exceeded the 4096 bytes.
 				// /////////////////////////////////////////////////////
-				var existingCookieValue = this.readCookie("layersList");
-				if(existingCookieValue){
-					var dim = existingCookieValue.length;
-					if(dim <= 3712){
+				var existingStoreValue = this.readStore("layersList");
+				if(existingStoreValue){
+					var dim = existingStoreValue.length;
+					if(dim <= this.storeSize){
 						//
 						// Change the cart style and OnClick method for remove and show the basket component
 						//
@@ -84,33 +112,38 @@ var basket_utils = {
 	 * Manages the direct preview call (from the dataset list page) for WMS resources
 	 */	
 	previewOnMap: function(resource_list){
-		this.eraseCookie("previewList");
+		this.eraseStore("previewList");
 		
 		for(var i=0; i<resource_list.length; i++){
 			var resource = resource_list[i];	
 		    var key = this.prepareKey(resource);
-			var keyValue = this.preparePreviewOnMapCookie(key);			
+			var keyValue = this.preparePreviewOnMap(key);			
 		}
 		
 		var URLParams = this.buildUrlParams("preview");
-		var config = preview_config;
-		var href = config.mapStoreBaseURL + config.composerPath + "?" + URLParams.join("&");
 		
-		window.open(href);				
+		var href = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + URLParams.join("&");
+		
+		if(preview_config.storageMethod === "cookies"){
+			window.open(href);
+		}else{
+			this.postToMapStore(href, true);
+		}
+						
 	},
 
 	/**
-	 * Build the cookie for the direct WMS preview (from the dataset list page)
+	 * Build the store for the direct WMS preview (from the dataset list page)
 	 */	
-	preparePreviewOnMapCookie: function(keyValue){
-		var existingCookieValue = this.readCookie("previewList");
+	preparePreviewOnMap: function(keyValue){
+		var existingStoreValue = this.readStore("previewList");
 
-		if(existingCookieValue && existingCookieValue != ""){
-			existingCookieValue += "#" + keyValue;
-			this.eraseCookie("previewList");
-			this.createCookie("previewList", existingCookieValue, null);
+		if(existingStoreValue && existingStoreValue != ""){
+			existingStoreValue += "#" + keyValue;
+			this.eraseStore("previewList");
+			this.createStore("previewList", existingStoreValue, null);
 		}else{
-			this.createCookie("previewList", keyValue, null);
+			this.createStore("previewList", keyValue, null);
 		}
 	},
 
@@ -132,7 +165,7 @@ var basket_utils = {
 	buildUrlParams: function(template, capabilitiesUrl, name, url){
 		var URLParams = [];		
 		
-		URLParams.push("locale=en");                // TODO: link to the Ckan locale ???
+		URLParams.push("locale=" + this.locale);                // TODO: link to the real Ckan locale ???
 		
 		if(template == "simple"){
 			if(capabilitiesUrl && name){
@@ -145,15 +178,14 @@ var basket_utils = {
 				URLParams.push("gsturl=" + encodeURIComponent(mHost[1] + mHost[2] + "/geostore/rest/"));
 				URLParams.push("mapId=" + url.split("data/")[1]);
 			}
-		}else if(template == "preview"){
+		}else if(template == "preview" && preview_config.storageMethod === "cookies"){
 			URLParams.push("useCookies=previewList");
-		}else if(template == "basket"){
+		}else if(template == "basket" && preview_config.storageMethod === "cookies"){
 			URLParams.push("useCookies=layersList");
 		}
 		
-		if(template == "basket" || template == "preview"){
-			var config = preview_config;
-			var backgroundData = config.backgroundData;
+		if(template == "basket" || template == "preview"){			
+			var backgroundData = preview_config.backgroundData;
 			
 			if(backgroundData){
 				var baseMapId = backgroundData.baseMapId;			
@@ -246,32 +278,32 @@ var basket_utils = {
 	 * Private method to add element to the basket. It manages the list of sub element
 	 */
 	_addToBasket: function(keyValue, resource_list){
-		var existingCookieValue = this.readCookie("layersList");
-		var cookieSize = 0;
+		var existingStoreValue = this.readStore("layersList");
+		var storeSize = 0;
 		
-		if(existingCookieValue && existingCookieValue != ""){
+		if(existingStoreValue && existingStoreValue != ""){
 			// /////////////////////////////////////////////////////
 			// Calculate the existing cookie dimension. The 
 			// dimension could not exceeded the 4096 bytes.
 			// /////////////////////////////////////////////////////
-			var dim = (existingCookieValue + "#" + keyValue).length;
-			if(dim > 3712){
-				cookieSize = dim;
+			var dim = (existingStoreValue + "#" + keyValue).length;
+			if(dim > this.storeSize){
+				storeSize = dim;
 			}else{
-				cookieSize = dim;
-				existingCookieValue += "#" + keyValue;
-				this.eraseCookie("layersList");
-				this.createCookie("layersList", existingCookieValue, null);
+				storeSize = dim;
+				existingStoreValue += "#" + keyValue;
+				this.eraseStore("layersList");
+				this.createStore("layersList", existingStoreValue, null);
 			}		
 		}else{
-			this.createCookie("layersList", keyValue, null);
+			this.createStore("layersList", keyValue, null);
 		}
 		
 		// //////////////////////////////////////////////
 		// Create the HTML element into the Basket list
 		// //////////////////////////////////////////////
 		
-		if(keyValue && cookieSize <= 3712){
+		if(keyValue && storeSize <= this.storeSize){
 			var basketListChilds = $("#basketlist").children();
 
 			var keys = unescape(keyValue);
@@ -281,10 +313,9 @@ var basket_utils = {
 			if(layerName.indexOf(":") != -1){
 				layerName = layerName.split(":")[1];
 			}
-
-			var config = preview_config;
+			
 			var icon = "";
-			if(config.basketStatus === true){
+			if(preview_config.basketStatus === true){
 				if(keys.verified == 'True'){
 					// resource verified OK during the harvest process
 					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
@@ -298,7 +329,7 @@ var basket_utils = {
 
 			return true;
 		}else{
-			alert("Cookie dimension exceeded. Some items may not have been added to the cart.");
+			alert(this.i18n.storeExceededMsg);
 			return false;
 		}
 	},
@@ -308,10 +339,10 @@ var basket_utils = {
 	 * and the keys coockie control to enable/disable teh cart button from the dataset list 
 	 */
 	_removeFromBasket: function(keyValue){
-		var existingCookieValue = this.readCookie("layersList");
+		var existingStoreValue = this.readStore("layersList");
 		
-		if(existingCookieValue && existingCookieValue != ""){
-			var arrayList = existingCookieValue.split("#");
+		if(existingStoreValue && existingStoreValue != ""){
+			var arrayList = existingStoreValue.split("#");
 			
 			var newArray = [];
 			for(var i=0; i<arrayList.length; i++){
@@ -375,11 +406,11 @@ var basket_utils = {
 			}
 			
 			if(newArray.length < 1){
-				this.eraseCookie("layersList");
+				this.eraseStore("layersList");
 			}else{
 				var newCookie = newArray.join("#");
-				this.eraseCookie("layersList");
-				this.createCookie("layersList", newCookie, null);
+				this.eraseStore("layersList");
+				this.createStore("layersList", newCookie, null);
 			}
 			
 			//
@@ -422,53 +453,71 @@ var basket_utils = {
 		
 		if(pressed){
 			cartButton.attr("class", "label basket-label-cart-red");
-			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Remove from Cart</spam>"));
+			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>" + this.i18n.removeFromCartBtn + "</spam>"));
 		}else{
 			cartButton.attr("class", "label basket-label-cart");
-			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>Add to Cart</spam>"));
+			cartButton.append($("<i class='icon-shopping-cart'></i> <spam>" + this.i18n.addToCartBtn + "</spam>"));
 		}
-	},
-
-	/**
-	 * Creates the cookie
-	 */
-	createCookie: function(name, value, days) {
-		if (days) {
-			var date = new Date();
-			
-			var d = days*24*60*60*1000;
-			var u = date.getTime() + d;
-			
-			date.setTime(u);
-			var expires = "; expires=" + date.toGMTString();
-		}else {
-			var expires = "";
-		}		
-		
-		document.cookie = name + "=" + value + expires + "; path=/";
 	},
 
     /**
-	 * Read a cookie
+	 * Creates the Store
 	 */
-	readCookie: function(name) {
-		var nameEQ = name + "=";
-		var ca = document.cookie.split(';');
-		
-		for(var i=0;i < ca.length;i++) {
-			var c = ca[i];
-			while (c.charAt(0)==' ') c = c.substring(1, c.length);
-			if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+	createStore: function(name, value, days) {
+		if(preview_config.storageMethod === 'cookies'){
+			if (days) {
+				var date = new Date();
+				
+				var d = days*24*60*60*1000;
+				var u = date.getTime() + d;
+				
+				date.setTime(u);
+				var expires = "; expires=" + date.toGMTString();
+			}else {
+				var expires = "";
+			}		
+			
+			document.cookie = name + "=" + value + expires + "; path=/";
+		}else if(preview_config.storageMethod === 'localstorage'){
+			localStorage[name] = value;
+		}else if(preview_config.storageMethod === 'sessionstorage'){
+			sessionStorage[name] = value;
 		}
-		
-		return null;
+	},
+
+    /**
+	 * Read a Store
+	 */
+	readStore: function(name) {
+		if(preview_config.storageMethod === 'cookies'){
+			var nameEQ = name + "=";
+			var ca = document.cookie.split(';');
+			
+			for(var i=0;i < ca.length;i++) {
+				var c = ca[i];
+				while (c.charAt(0)==' ') c = c.substring(1, c.length);
+				if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+			}
+			
+			return null;
+		}else if(preview_config.storageMethod === 'localstorage'){
+			return localStorage[name];
+		}else if(preview_config.storageMethod === 'sessionstorage'){
+			return sessionStorage[name];
+		}
 	},
 	
 	/**
-	 * Delete a cookie
+	 * Delete a Store
 	 */
-	eraseCookie: function (name) {
-		this.createCookie(name, "", -1);
+	eraseStore: function (name) {
+		if(preview_config.storageMethod === 'cookies'){
+			this.createStore(name, "", -1);
+		}else if(preview_config.storageMethod === 'localstorage'){
+			localStorage.removeItem(name);
+		}else if(preview_config.storageMethod === 'sessionstorage'){
+			sessionStorage.removeItem(name);
+		}		
 	}
 }
 

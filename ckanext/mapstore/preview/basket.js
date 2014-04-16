@@ -5,6 +5,24 @@ this.ckan.module('basket', function (jQuery, _) {
 	return{
 		options: {
 			i18n: {
+				en:{
+					configMethodErrorMsg: "Configuration Error. Valid values for 'storageMethod' property are: cookies, sessionstorage or localstorage.",
+					showLayersBtn: "Show Layers",
+					removeFromCartBtn: " Remove from Map",
+					addToCartBtn: " Add to Map",
+					storeExceededMsg: "Store dimension exceeded for shopping cart. Some items may not have been added to the cart.",
+					mapPreviewList: "Map Preview List",
+					previewOnMap: " Preview on Map"
+				},
+				it:{
+					configMethodErrorMsg: "Errore di configurazione. Valori validi per la proprietà 'storageMethod' sono: cookies, sessionstorage o localstorage.",
+					showLayersBtn: "Visualizza Livelli",
+					removeFromCartBtn: " Rimuovi dalla Mappa",
+					addToCartBtn: " Aggiungi alla Mappa",
+					storeExceededMsg: "Raggiunta la dimesione massima del carrello. Alcuni oggetti potrebbero non essere aggiunti, rimuoverne alcuni.",
+					mapPreviewList: "Lista Anteprima Mappa",
+					previewOnMap: " Anteprima su Mappa"
+				}
 			}
 		},
 
@@ -14,7 +32,10 @@ this.ckan.module('basket', function (jQuery, _) {
 		},
 
 		_onReady: function() {
-			var config = preview_config;
+			var locale = preview_config.forceLocaleTo || ckan.i18n.defaults.locale_data.messages[""].lang || "en";
+			this.setI18N(locale);
+			
+			this.configurationCheck();
 			
 			// /////////////////////////////
 			// Build the Basket list
@@ -25,16 +46,66 @@ this.ckan.module('basket', function (jQuery, _) {
 			// Set the show layers button
 			//
 			var basketURLParams = basket_utils.buildUrlParams("basket");
-			var src = config.mapStoreBaseURL + config.composerPath + "?" + basketURLParams.join("&");
-			var srcElement = $("#showBasket");
-			var srcValue = srcElement.attr("href", src);
+			var src = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + basketURLParams.join("&");
+					
+			var basketButton = $("#basketButton");
+			if(preview_config.storageMethod === "cookies"){
+				basketButton.append($("<a id=\"showBasket\" class='btn' href=\"#\" target='_blank'> " + this.msgs.showLayersBtn + "</a>"));
+				var showBasket = $("#showBasket");
+				showBasket.attr("href", src);
+			}else{
+				basketButton.append($("<a id=\"showBasket\" class='btn' onclick=\"javascript:basket_utils.postToMapStore(\'" + src + "\');\" target='_blank'> " + this.msgs.showLayersBtn + "</a>"));
+			}
         },
 		
-		buildBasketList: function(){
-			var existingCookieValue = this.checkCookies();
+		setI18N: function(locale){
+			this.msgs = eval("this.options.i18n." + locale);
 			
-			if(existingCookieValue){
-				var arrayList = existingCookieValue.split("#");
+			//
+			// Set the i18n in also in basket utils
+			//
+			basket_utils.i18n = this.msgs;
+			basket_utils.locale = locale;
+			
+			//
+			// Set i18n in templates
+			//
+			var me = this.msgs;
+			
+			$('spam[id="ckanext-mapstore-mapPreviewList"]').each(function(a, b) {
+				var obj = $(b);
+				obj.text(me.mapPreviewList);
+			});
+			
+			$('spam[id="ckanext-mapstore-addToCart"]').each(function(a, b) {
+				var obj = $(b);
+				obj.text(me.addToCartBtn);
+			});
+			
+			$('spam[id="ckanext-mapstore-previewOnMap"]').each(function(a, b) {
+				var obj = $(b);
+				obj.text(me.previewOnMap);
+			});
+		},
+		
+		configurationCheck: function(){
+			if(preview_config){
+				var method = preview_config.storageMethod;
+				if(method){
+					if(method != "sessionstorage" && method != "localstorage" && method != "cookies"){
+						alert(this.msgs.configMethodErrorMsg);
+					}
+				}else{
+					preview_config.storageMethod = "sessionstorage";
+				}
+			}
+		},
+		
+		buildBasketList: function(){
+			var existingStoreValue = this.checkForStorage();
+			
+			if(existingStoreValue){
+				var arrayList = existingStoreValue.split("#");
 	
 				var newArray = [];
 				for(var i=0; i<arrayList.length; i++){
@@ -58,9 +129,8 @@ this.ckan.module('basket', function (jQuery, _) {
 							hidden_resource_list = cart.children()[0].value;
 						}					
 
-						var config = preview_config;
 						var icon = "";
-						if(config.basketStatus === true){
+						if(preview_config.basketStatus === true){
 							if(keys.verified == 'True'){
 								// resource verified OK during the harvest process
 								icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
@@ -86,7 +156,7 @@ this.ckan.module('basket', function (jQuery, _) {
 
 							if(cartIconButton){
 								cartIconButton.empty();						
-								cartIconButton.append($("<i class='icon-shopping-cart'></i> <spam>Remove from Cart</spam>"));
+								cartIconButton.append($("<i class='icon-shopping-cart'></i> <spam>" + this.msgs.removeFromCartBtn + "</spam>"));
 							}	
 						}
 
@@ -109,12 +179,12 @@ this.ckan.module('basket', function (jQuery, _) {
 			}
 		},
 		
-		checkCookies: function(){
-			var existingCookieValue = basket_utils.readCookie("layersList");
+		checkForStorage: function(){
+			var existingStoreValue = basket_utils.readStore("layersList");
 			
-			if(existingCookieValue && existingCookieValue != ""){
-				var arrayList = existingCookieValue.split("#");
-				return arrayList.length > 0 ? existingCookieValue : undefined;
+			if(existingStoreValue && existingStoreValue != ""){
+				var arrayList = existingStoreValue.split("#");
+				return arrayList.length > 0 ? existingStoreValue : undefined;
 			}
 		}
     }
