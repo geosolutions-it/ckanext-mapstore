@@ -56,7 +56,7 @@ var basket_utils = {
 	 */
 	prepareKey: function(resource){
 		var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
-		var keyValue = "{\"verified\":\"" + resource.verified + "\", \"package_id\":\"" + resource.package_id + "\", \"id\":\"" + resource.id + "\", \"layer\":\"" + resource.name + "\", \"wms\":\"" + capabilitiesUrl + "\"}";
+		var keyValue = "{\"verified\":\"" + resource.verified + "\", \"package_id\":\"" + resource.package_id + "\", \"id\":\"" + resource.id + "\", \"layer\":\"" + resource.name + "\", \"wms\":\"" + capabilitiesUrl + "\", \"pname\":\"" + resource.pname + "\"}";
 		keyValue = escape(keyValue);
 		
 		return keyValue;		

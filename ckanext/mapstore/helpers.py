@@ -11,6 +11,9 @@ log = logging.getLogger(__name__)
 def get_wms_list(package):
 	list_ = package['resources']
 	package_id = package['id']
+	
+        ##package_name = package['name'] 
+        package_name = package['title'] or package['name']
 
         layers_list = [] 
 
@@ -22,9 +25,12 @@ def get_wms_list(package):
                                 'id':     item.get('id'),
                                 'url':    item.get('url'),
                                 'name':   item.get('name'),
+				'pname':  package_name,
 				'verified': item.get('verified'),
                                 'format': format
                         }
+
+         		##log.info('::::::::::::::::::::::::::: %r', resource)
 
                         layers_list.append(resource)
                         

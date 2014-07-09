@@ -1,9 +1,10 @@
 var preview_config = {
 	viewerConfigName: "preview",
-	viewerPath: "/embedded",
-	composerPath: "/composer",
-    mapStoreBaseURL: "http://localhost:8080/mapstore",
+	viewerPath: "embedded",
+	composerPath: "composer",
+        mapStoreBaseURL: "http://localhost:8080/mapstore",
 	basketStatus: false,
 	storageMethod: "sessionstorage",
-	forceLocaleTo: "it"
+	forceLocaleTo: "en",
+	storeSize: 5000
 }

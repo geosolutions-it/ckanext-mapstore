@@ -32,8 +32,10 @@ this.ckan.module('basket', function (jQuery, _) {
 		},
 
 		_onReady: function() {
-			var locale = preview_config.forceLocaleTo || ckan.i18n.defaults.locale_data.messages[""].lang || "en";
+			var locale = preview_config.forceLocaleTo || ckan.i18n.defaults.locale_data.messages[""].lang || "en";			
+			
 			this.setI18N(locale);
+			basket_utils.storeSize = preview_config.storeSize || basket_utils.storeSize;			
 			
 			this.configurationCheck();
 			
