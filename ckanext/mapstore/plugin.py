@@ -15,7 +15,7 @@ class MapStorePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IResourcePreview, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
 
-    MAPSTORE_FORMATS = ['wms', 'mapstore']
+    MAPSTORE_FORMATS = ['wms', 'wmts', 'mapstore']
 
     def update_config(self, config):
                 

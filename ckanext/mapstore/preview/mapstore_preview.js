@@ -82,6 +82,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 				if(capabilitiesUrl && resource){
 					URLParams.push("wmsurl=" + capabilitiesUrl);
 					URLParams.push("layName=" + resource.name);
+					URLParams.push("format=" + resource.format);
 					
 					var backgroundData = config.backgroundData;
 					

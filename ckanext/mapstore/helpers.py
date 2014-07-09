@@ -19,7 +19,7 @@ def get_wms_list(package):
 
         for item in list_:
                 format = item.get('format')
-                if format == 'wms':
+                if format == 'wms' or format == 'wmts':
                         resource = {
 				'package_id': package_id,
                                 'id':     item.get('id'),
