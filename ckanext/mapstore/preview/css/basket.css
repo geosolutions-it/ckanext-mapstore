@@ -16,8 +16,32 @@ a, a label {
   width: 250px;
 }
 
-.facet-box-unboxed {
+/*.facet-box-unboxed {
   padding-left: 15px;
+}*/
+
+.facet-box-unboxed  ul{
+  margin: 0 0 0 0;
+  width: 265px;
+}
+
+#left{
+	float:left;
+	width:25px;
+}
+
+#right{
+	float:right;
+	width:25px; 
+	position: absolute; 
+	top: 0; 
+	right: -6px;
+}
+
+#center{
+	margin:0 auto;
+	width:200px;
+	word-wrap: break-word;
 }
 
 #shopping-basket-reset {
@@ -51,6 +75,7 @@ a, a label {
   line-height: 20px;
   margin-bottom: -1px;
   position: relative;
+  width: 100%;
 }
 
 .icon-large:before {

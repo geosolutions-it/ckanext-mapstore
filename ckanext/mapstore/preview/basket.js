@@ -10,18 +10,26 @@ this.ckan.module('basket', function (jQuery, _) {
 					showLayersBtn: "Show Layers",
 					removeFromCartBtn: " Remove from Map",
 					addToCartBtn: " Add to Map",
+					addToBasketBtn: " Add to Map",
 					storeExceededMsg: "Store dimension exceeded for shopping cart. Some items may not have been added to the cart.",
 					mapPreviewList: "Map Preview List",
-					previewOnMap: " Preview on Map"
+					previewOnMap: " Preview on Map",
+					resourceSelectionTitle: "Resources Selection",
+					selectAll: "Select All",
+					close: "Close"
 				},
 				it:{
 					configMethodErrorMsg: "Errore di configurazione. Valori validi per la proprietà 'storageMethod' sono: cookies, sessionstorage o localstorage.",
 					showLayersBtn: "Visualizza Livelli",
 					removeFromCartBtn: " Rimuovi dalla Mappa",
 					addToCartBtn: " Aggiungi alla Mappa",
+					addToBasketBtn: "Aggiungi alla Mappa",
 					storeExceededMsg: "Raggiunta la dimesione massima del carrello. Alcuni oggetti potrebbero non essere aggiunti, rimuoverne alcuni.",
 					mapPreviewList: "Lista Anteprima Mappa",
-					previewOnMap: " Anteprima su Mappa"
+					previewOnMap: " Anteprima su Mappa",
+					resourceSelectionTitle: "Selezione delle Risorse",
+					selectAll: "Seleziona Tutti",
+					close: "Chiudi"
 				}
 			}
 		},
@@ -32,7 +40,7 @@ this.ckan.module('basket', function (jQuery, _) {
 		},
 
 		_onReady: function() {
-			var locale = preview_config.forceLocaleTo || ckan.i18n.defaults.locale_data.messages[""].lang || "en";			
+			var locale =  ckan.i18n.options.locale_data.ckan[""].lang || preview_config.forceLocaleTo || "en";			
 			
 			this.setI18N(locale);
 			basket_utils.storeSize = preview_config.storeSize || basket_utils.storeSize;			
@@ -118,9 +126,9 @@ this.ckan.module('basket', function (jQuery, _) {
 						keys = $.parseJSON(keys);
 						
 						var layerName = keys.layer;
-						if(layerName.indexOf(":") != -1){
+						/*if(layerName.indexOf(":") != -1){
 							layerName = layerName.split(":")[1];
-						}
+						}*/
 						
 						//
 						// Take the resource list from the hidden input of cart button
@@ -135,15 +143,33 @@ this.ckan.module('basket', function (jQuery, _) {
 						if(preview_config.basketStatus === true){
 							if(keys.verified == 'True'){
 								// resource verified OK during the harvest process
-								icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
+								icon = "<div id='left' class='facet-kill pull-left'>" +
+											"<i class='icon-large icon-ok' style='color: #188F26;'></i>" + 
+									   "</div>";
 							}else{
 								// resource verified NOT RUNNING during the harvest process
-								icon = "<div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>";
+								icon = "<div id='left' class='facet-kill pull-left'>" +
+											"<i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i>" + 
+									   "</div>";
 							}
 						}
 						
-						$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + hidden_resource_list + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/>" + icon + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
-
+						$("#basketlist").append($(
+							"<li class='list-group-item'>" +
+								"<input type='hidden' value='" + hidden_resource_list + "'/>" + 
+								"<input type='hidden' value='" + keys.package_id + "," + keys.id + "'/>" + 
+								icon + 
+								"<div id='center'>" + 
+									"<p>" + layerName + "</p>" + 
+								"</div>" +
+								"<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\">" + 
+									"<div id='right' class='facet-kill pull-right'>" + 
+										"<i class='icon-large icon-remove-sign' style='color: #777777;'></i>" +
+									"</div>" + 
+								"</a>" + 
+							"</li>"
+						));	
+			
 						//
 						// Change the cart style and show the basket component
 						//

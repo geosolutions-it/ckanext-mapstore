@@ -66,35 +66,155 @@ var basket_utils = {
 	 * Add a new element to teh basket div
 	 */	
 	addToBasket: function(resource_list, package_id){
-		var styleChanged = false;
-		for(var i=0; i<resource_list.length; i++){
-			var resource = resource_list[i];				
-			var keyValue = this.prepareKey(resource);			
-			var status = this._addToBasket(keyValue, resource_list);
+		//var styleChanged = false;
+		
+		// //////////////////////////////////////////
+		// Allow the user to select resources he want
+		// to add to the basket if there are multiple
+		// instance of them.
+		// //////////////////////////////////////////
+		if(resource_list.length > 1){
+			this.showSelectionDialog(resource_list, package_id, function(resource_list, package_id){
+				var resourcesArray = $("#modalResourceDialog").find( "input" );
+				var selectedResources = [];
+				for(var j=0; j<resourcesArray.length; j++){
+					var resource = resourcesArray[j];
+					
+					if(resource.checked === true){
+						var json = $.parseJSON(resource.value);
+						selectedResources.push(json);
+					}				
+				}
+				
+				//
+				// Put in the basket only the selected resources
+				//
+				for(var j=0; j<selectedResources.length; j++){
+					var resource = selectedResources[j];
+					var keyValue = this.prepareKey(resource);
+					
+					this.processAddToBasket(keyValue, resource_list, package_id);
+				}
+				
+				$('.custom-modal').modal('hide');
+				$('.custom-modal').remove();
+			});
+		}else{
+			var resource = resource_list[0];				
+			var keyValue = this.prepareKey(resource);	
 			
-			if(!styleChanged && status === true){
-				// /////////////////////////////////////////////////////
-				// Calculate the existing cookie dimension. The 
-				// dimension could not exceeded the 4096 bytes.
-				// /////////////////////////////////////////////////////
-				var existingStoreValue = this.readStore("layersList");
-				if(existingStoreValue){
-					var dim = existingStoreValue.length;
-					if(dim <= this.storeSize){
-						//
-						// Change the cart style and OnClick method for remove and show the basket component
-						//
-						var cartId = package_id;
-						var cartButton = $("#" + cartId);
-						cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
-						
-						this.setCartButtonStyle(cartId, true);		
-						this.showBasket(this.basketContainerId, this.basketHeaderId);
-						styleChanged = true;
-					}
+			this.processAddToBasket(keyValue, resource_list, package_id);
+		}
+	},
+	
+	processAddToBasket: function(keyValue, resource_list, package_id){
+		var styleChanged = false;
+		
+		var status = this._addToBasket(keyValue, resource_list);
+		
+		if(!styleChanged && status === true){
+			// /////////////////////////////////////////////////////
+			// Calculate the existing cookie dimension. The 
+			// dimension could not exceeded the 4096 bytes.
+			// /////////////////////////////////////////////////////
+			var existingStoreValue = this.readStore("layersList");
+			if(existingStoreValue){
+				var dim = existingStoreValue.length;
+				if(dim <= this.storeSize){
+					//
+					// Change the cart style and OnClick method for remove and show the basket component
+					//
+					var cartId = package_id;
+					var cartButton = $("#" + cartId);
+					cartButton.attr("onClick", "javascript:basket_utils.removeFromBasket(" + JSON.stringify(resource_list) + ", '" + cartId + "');");
+					
+					this.setCartButtonStyle(cartId, true);		
+					this.showBasket(this.basketContainerId, this.basketHeaderId);
+					styleChanged = true;
 				}
 			}
 		}
+	},
+	
+	/**
+	 * Allows the user the choice of which WMS resources have to be added to the cart.
+	 */	
+	showSelectionDialog: function(resource_list, package_id, callback){
+		var customModal = $(
+			'<div class="custom-modal modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">' + 
+				'<div class="modal-header">' + 
+					'<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
+					'<h4 class="modal-title">' + this.i18n.resourceSelectionTitle + '</h4>' +
+				'</div>' + 
+				'<div class="modal-body">' + 
+					'<ul class="list-group">' + 
+					    '<li class="list-group-item">' + 
+							'<input id="ckanext-mapstore-select-all" type="checkbox" style=\"top: 0px;\"/>' + this.i18n.selectAll + 
+						"</li>" +
+					'</ul>' +
+					'<ul id="modalResourceDialog" class="list-group">' + 
+					'</ul>' + 
+				'</div>' + 
+				'<div class="modal-footer">' +
+					'<button type="button" class="btn btn-default" data-dismiss="modal">' + this.i18n.close + '</button>' +
+					'<button id="add-to-cart" type="button" class="btn btn-primary">' + this.i18n.addToBasketBtn + '</button>' +
+				'</div>' +
+			'</div>'
+		);
+
+		$('body').append(customModal);
+		
+		//
+		// Configure the 'select all' checkbox handler
+		//
+		$('#ckanext-mapstore-select-all').change(function(){
+			var inputs = $("#modalResourceDialog").find("input");
+			for(var i=0; i<inputs.length; i++){
+				inputs[i].checked = this.checked;
+			}
+		});
+			
+		for(var i=0; i<resource_list.length; i++){
+			var resource = resource_list[i];				
+			var keyValue = this.prepareKey(resource)
+				
+			var keys = unescape(keyValue);
+			keys = $.parseJSON(keys);
+			
+			var layerName = keys.layer;
+			
+			var icon = "";
+			if(preview_config.basketStatus === true){
+				if(keys.verified == 'True'){
+					// resource verified OK during the harvest process
+					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
+				}else{
+					// resource verified NOT RUNNING during the harvest process
+					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>";
+				}
+			}
+			
+			$("#modalResourceDialog").append($(
+				"<li class='list-group-item'>" + 
+					"<input type='checkbox' style=\"top: 0px;\" value='" + JSON.stringify(resource) + "'/> " + icon + layerName + 
+				"</li>"
+			));
+		}	
+		
+		//
+		// Populate the cart after user's selection.
+		//
+		var me = this;
+		$('#add-to-cart').click(function(){
+			callback.call(me, resource_list, package_id);
+		});		
+		
+		$('.custom-modal .hide').show();
+		$('.custom-modal').modal();
+	  
+		$('.custom-modal').on('hidden', function(){
+			$('.custom-modal').remove();
+		});
 	},
 
 	/**
@@ -114,12 +234,51 @@ var basket_utils = {
 	previewOnMap: function(resource_list){
 		this.eraseStore("previewList");
 		
-		for(var i=0; i<resource_list.length; i++){
-			var resource = resource_list[i];	
-		    var key = this.prepareKey(resource);
-			var keyValue = this.preparePreviewOnMap(key);			
-		}
-		
+		// //////////////////////////////////////////
+		// Allow the user to select resources he want
+		// to add to the basket if there are multiple
+		// instance of them.
+		// //////////////////////////////////////////
+		if(resource_list.length > 1){
+			this.showSelectionDialog(resource_list, null, function(resource_list){
+				var resourcesArray = $("#modalResourceDialog").find( "input" );
+				var selectedResources = [];
+				for(var j=0; j<resourcesArray.length; j++){
+					var resource = resourcesArray[j];
+					
+					if(resource.checked === true){
+						var json = $.parseJSON(resource.value);
+						selectedResources.push(json);
+					}				
+				}
+				
+				//
+				// Put in the basket only the selected resources
+				//
+				for(var i=0; i<selectedResources.length; i++){	
+					var resource = selectedResources[i];	
+					var key = this.prepareKey(resource);
+					this.preparePreviewOnMap(key);		
+				}
+				
+				this._previewOnMap();
+				
+			    $('.custom-modal').modal('hide');
+				$('.custom-modal').remove();
+			});
+		}else{
+			var resource = resource_list[0];	
+			var key = this.prepareKey(resource);
+			this.preparePreviewOnMap(key);
+
+			this._previewOnMap();			
+		}					
+	},
+	
+	/**
+	 * Prepares the URL before performing the request to MapStore
+	 */	
+	_previewOnMap: function(){
 		var URLParams = this.buildUrlParams("preview");
 		
 		var href = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + URLParams.join("&");
@@ -128,8 +287,7 @@ var basket_utils = {
 			window.open(href);
 		}else{
 			this.postToMapStore(href, true);
-		}
-						
+		}	
 	},
 
 	/**
@@ -310,22 +468,40 @@ var basket_utils = {
 			keys = $.parseJSON(keys);
 			
 			var layerName = keys.layer;
-			if(layerName.indexOf(":") != -1){
+			/*if(layerName.indexOf(":") != -1){
 				layerName = layerName.split(":")[1];
-			}
+			}*/
 			
 			var icon = "";
 			if(preview_config.basketStatus === true){
 				if(keys.verified == 'True'){
 					// resource verified OK during the harvest process
-					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
+					icon = "<div id='left' class='facet-kill pull-left'>" + 
+								"<i class='icon-large icon-ok' style='color: #188F26;'></i>" +
+							"</div>";
 				}else{
 					// resource verified NOT RUNNING during the harvest process
-					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>";
+					icon = "<div id='left' class='facet-kill pull-left'>" + 
+								"<i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i>" + 
+							"</div>";
 				}
 			}
 			
-			$("#basketlist").append($("<li class='list-group-item'><input type='hidden' value='" + JSON.stringify(resource_list) + "'/><input type='hidden' value='" + keys.package_id + "," + keys.id + "'/>" + icon + layerName + "<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\"><div class='facet-kill pull-right'><i class='icon-large icon-remove-sign' style='color: #777777;'></i></div></a></li>"));	
+			$("#basketlist").append($(
+				"<li class='list-group-item'>" + 
+					"<input type='hidden' value='" + JSON.stringify(resource_list) + "'/>" + 
+					"<input type='hidden' value='" + keys.package_id + "," + keys.id + "'/>" +  
+					icon +  
+					"<div id='center'>" + 
+						"<p>" + layerName + "</p>" + 
+					"</div>" + 
+					"<a onClick=\"javascript:basket_utils._removeFromBasket('" + keyValue + "')\">" + 
+						"<div id='right' class='facet-kill pull-right'>" + 
+							"<i class='icon-large icon-remove-sign' style='color: #777777;'></i>" + 
+						"</div>" + 
+					"</a>" + 
+				"</li>"
+			));	
 
 			return true;
 		}else{

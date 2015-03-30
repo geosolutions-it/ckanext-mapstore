@@ -1,6 +1,6 @@
 var mapstore_utils = {
 
-	defaultVersion: "1.1.1",
+	defaultVersion: "1.3.0",
 
 	/**
 	 * Generate capabilities URL for a server. 
