@@ -187,16 +187,20 @@ var basket_utils = {
 			if(preview_config.basketStatus === true){
 				if(keys.verified == 'True'){
 					// resource verified OK during the harvest process
-					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
+					icon = "<div id='left' class='facet-kill pull-left'><i class='icon-large icon-ok' style='color: #188F26;'></i></div>";
 				}else{
 					// resource verified NOT RUNNING during the harvest process
-					icon = "<div class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>";
+					icon = "<div id='left' class='facet-kill pull-left'><i class='icon-large icon-minus-sign' style='color: #ED0C26;'></i></div>";
 				}
 			}
 			
 			$("#modalResourceDialog").append($(
 				"<li class='list-group-item'>" + 
-					"<input type='checkbox' style=\"top: 0px;\" value='" + JSON.stringify(resource) + "'/> " + icon + layerName + 
+					icon +  
+					"<input type='checkbox' style=\"top: 0px;\" value='" + JSON.stringify(resource) + "'/> " +
+					"<div id='selection-dialog'>" + 
+						"<p>" + layerName + "</p>" +
+					"</div>" + 
 				"</li>"
 			));
 		}	

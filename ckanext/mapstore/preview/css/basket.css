@@ -44,6 +44,10 @@ a, a label {
 	word-wrap: break-word;
 }
 
+#selection-dialog{
+	word-wrap: break-word;
+}
+
 #shopping-basket-reset {
     color: #777777;
 	padding-top: 12px;
