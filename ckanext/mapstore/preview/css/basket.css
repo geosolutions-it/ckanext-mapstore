@@ -70,7 +70,7 @@ a, a label {
 }
 
 .list-group-item {
-  background-color: #F6F6F6;
+  /*background-color: #F6F6F6;*/
   border: 2px solid #FFFFFF;
   color: #444444;
   display: block;
