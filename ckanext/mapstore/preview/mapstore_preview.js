@@ -20,9 +20,17 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 		},
 
 		_onReady: function() {
-			this.setI18N(preview_config.forceLocaleTo || ckan.i18n.defaults.locale_data.messages[""].lang || "en");
+			this.setI18N(ckan.i18n.options.locale_data.ckan[""].lang || preview_config.forceLocaleTo || "en");
 			
 			var resource = preload_resource;
+			
+			for(var i=0; i<package_wms_list.length; i++){
+				var item = package_wms_list[i];
+				if(item.id == resource.id && item.time_interval){
+					resource.timeInterval = item.time_interval;
+				}
+			}		
+			
 			var url = resource.url;
 			
 			var capabilitiesUrl = this.getCapabilitiesURL(url);
@@ -64,7 +72,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 		 * Parse the WMS GetCapabilities URL 
 		 */
 		getCapabilitiesURL: function(url){
-			var wmsUrl, capabilitiesUrl;
+			var capabilitiesUrl;
 			if(url.indexOf('geostore') == -1){
 				capabilitiesUrl = mapstore_utils.getCapabilitiesUrl(url);
 			}
@@ -110,6 +118,10 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			if(template == "viewer"){
 				URLParams.push("langSelector=false");
 				URLParams.push("config=" + config.viewerConfigName);
+				
+				if(resource.timeInterval){
+					URLParams.push("timeInterval=" + resource.timeInterval);
+				}
 			}
 
 			return URLParams;

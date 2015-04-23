@@ -14,7 +14,18 @@ def get_wms_list(package):
 	
         ##package_name = package['name'] 
         package_name = package['title'] or package['name']
+        
+        package_extras = package['extras']
+        time_interval = ''
 
+        for item in package_extras:
+		key = item.get('key')
+		if key == 'temporal-extent-instant':
+			value = item.get('value')
+			value_array = value.split(',')
+			time_interval = value_array[0] + '/' + value_array[len(value_array) - 1]
+			break			
+ 
         layers_list = [] 
 
         for item in list_:
@@ -27,10 +38,11 @@ def get_wms_list(package):
                                 'name':   item.get('name'),
 				'pname':  package_name,
 				'verified': item.get('verified'),
+                                'time_interval': time_interval,
                                 'format': format
                         }
 
-         		##log.info('::::::::::::::::::::::::::: %r', resource)
+         		##log.info('::::::::::::::::::::::::::: %r', package)
 
                         layers_list.append(resource)
                         
