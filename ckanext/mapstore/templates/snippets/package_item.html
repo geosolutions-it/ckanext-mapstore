@@ -1,0 +1,99 @@
+  {% ckan_extends %}
+  
+  {% block package_item_content %}
+  
+    {% if package.extras %}
+		{% set thumb_exists = [] %}
+		
+		{% for extra in package.extras %}
+			{% set value = extra.value %}
+			{% set key = extra.key %}
+			{% if key == "graphic-preview-file" %}
+			    {% do thumb_exists.append(1) %}
+				<img src='{{value}}' style='float: right; width: 95px;'/>
+			{% endif %}
+		{% endfor %}
+
+		{% set is_map_presource = [] %}
+	    {% for resource in package.resources %}
+			{% set format = resource.format %}
+			{% if format == "wms" or format == "geostore" %}
+			    {% do is_map_presource.append(1) %}
+			{% endif %}
+		{% endfor %}
+		
+		{% if not thumb_exists[0] and is_map_presource[0] %}
+			<img src="{{h.url_for_static('/images/preview.png') }}" style='float: right; width: 60px;'/>
+		{% endif %}	
+	{% endif %}
+
+	<div class="dataset-content">
+      <h3 class="dataset-heading">
+        {% if package.private %}
+          <span class="dataset-private label label-inverse">
+            <i class="icon-lock"></i>
+            {{ _('Private') }}
+          </span>
+        {% endif %}
+        {{ h.link_to(h.truncate(title, truncate_title), h.url_for(controller='package', action='read', id=package.name)) }}
+        {% if package.get('state', '').startswith('draft') %}
+          <span class="label label-info">{{ _('Draft') }}</span>
+        {% elif package.get('state', '').startswith('deleted') %}
+          <span class="label label-important">{{ _('Deleted') }}</span>
+        {% endif %}
+        {{ h.popular('recent views', package.tracking_summary.recent, min=10) if package.tracking_summary }}
+      </h3>
+      {% if banner %}
+        <span class="banner">{{ _('Popular') }}</span>
+      {% endif %}
+      {% if notes %}
+        <div>{{ notes|urlize }}</div>
+      {% else %}
+        <p class="empty">{{ _("This dataset has no description") }}</p>
+      {% endif %}
+    </div>
+    {% if package.resources and not hide_resources %}
+      <ul class="dataset-resources unstyled">
+        {% for resource in h.dict_list_reduce(package.resources, 'format') %}
+          <li>
+            <a href="{{ h.url_for(controller='package', action='read', id=package.name) }}" class="label" data-format="{{ resource.lower() }}">{{ resource }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+	
+	<!-- -------------------------------------------------------------------------- -->
+	<!-- New elements for the MapStore extension: The control of the basket. -->
+	<!-- -------------------------------------------------------------------------- -->
+
+	{% if package.resources and not hide_resources %}
+	  <ul class="dataset-resources unstyled" style="float: right; display: inline-block;">
+		{% set wms_layer_list = h.get_wms_list(package) %}
+
+		{% if wms_layer_list %}
+			<li>
+				<a id="cart-{{ package.id }}" onClick="javascript:basket_utils.addToBasket({{ wms_layer_list }}, this.id);" class="label basket-label-cart">
+					<input type='hidden' value="{{ wms_layer_list }}"/>
+					<div id="cart-icon-{{ package.id }}"><i class="icon-shopping-cart"></i><spam id="ckanext-mapstore-addToCart"> Add to Map</spam></div>
+				</a>
+			</li>
+			
+			<li>
+				<a id="{{ package.id }}" onClick="javascript:basket_utils.previewOnMap({{ wms_layer_list }});" class="label basket-label-preview"><i class="icon-map-marker"></i><spam id="ckanext-mapstore-previewOnMap"> Preview on Map</spam></a>
+			</li>
+		{% endif %}
+		
+	    {% set mapstore_map_list = h.get_mapstore_list(package) %}
+		
+		{% if mapstore_map_list %}
+			<li>
+				<a id="{{ package.id }}" onClick="javascript:basket_utils.preparePreviewURL({{ mapstore_map_list }});" class="label basket-label-preview"><i class="icon-map-marker"></i><spam id="ckanext-mapstore-previewOnMap"> Preview on Map</spam></a>
+			</li>
+		{% endif %}
+
+		</ul>
+	{% endif %}
+	
+	<!-- -------------------------------------------------------------------------- -->
+		
+  {% endblock %}
