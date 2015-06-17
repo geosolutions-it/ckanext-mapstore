@@ -21,3 +21,9 @@
     margin-bottom: 8px;
     text-transform: uppercase;
 }
+
+.module .pagination {
+  height: 34px;
+  margin-bottom: 0;
+  border-top: 30px solid #ffffff;
+}
