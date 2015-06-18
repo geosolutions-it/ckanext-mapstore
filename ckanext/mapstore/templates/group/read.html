@@ -22,7 +22,7 @@
   {% endblock %}
   {% block packages_list %}
     {% if c.page.items %}
-      {{ h.snippet('snippets/package_list_basket.html', packages=c.page.items) }}
+      {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
     {% endif %}
   {% endblock %}
   {% block page_pagination %}
