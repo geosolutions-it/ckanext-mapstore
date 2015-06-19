@@ -200,13 +200,17 @@ class GeoStoreHarvester(HarvesterBase):
 		
 			if 'Attributes' in resource_content:
 				attribute = resource_content['Attributes']['attribute']
-				name = attribute['name']
-			
-				if name == 'owner':
-					value = attribute['value']
+				
+				for attr in attribute:
+					#log.debug('::::::::::::::::::::::::::::: %r ', attr)
+					name = attr['name']
+					#log.debug('::::::::::::::::::::::::::::: %r ', name)
+					
+					if name == 'owner':
+						value = attr['value']
 
-                                       	package_dict['author'] = value
-					package_dict['maintainer'] = value
+                                       		package_dict['author'] = value
+						package_dict['maintainer'] = value
 
 			if 'lastUpdate' in resource_content:
 				package_dict['extras']['last_update'] = resource_content['lastUpdate']

@@ -24,12 +24,15 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			
 			var resource = preload_resource;
 			
-			for(var i=0; i<package_wms_list.length; i++){
-				var item = package_wms_list[i];
-				if(item.id == resource.id && item.time_interval){
-					resource.timeInterval = item.time_interval;
-				}
-			}		
+			if(package_wms_list){
+				for(var i=0; i<package_wms_list.length; i++){
+					var item = package_wms_list[i];
+					if(item.id == resource.id && item.time_interval){
+						resource.timeInterval = item.time_interval;
+					}
+				}	
+			}
+	
 			
 			var url = resource.url;
 			
