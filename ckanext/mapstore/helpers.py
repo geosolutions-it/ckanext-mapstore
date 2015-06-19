@@ -71,5 +71,5 @@ def get_mapstore_list(package):
                         maps_list.append(resource)
 
         if len(maps_list) > 0:
-                return json.dumps(maps_list)
+		return json.dumps(maps_list)
 
