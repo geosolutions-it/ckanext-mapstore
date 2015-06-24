@@ -18,6 +18,11 @@ def get_wms_list(package):
         package_extras = package['extras']
         time_interval = ''
 
+	## ########################################################
+	## Check for temporal extent instant in dataset extras.
+	## If present the start time and the start time will be 
+	## added to the resource dict
+	## ########################################################
         for item in package_extras:
 		key = item.get('key')
 		if key == 'temporal-extent-instant':
@@ -73,3 +78,26 @@ def get_mapstore_list(package):
         if len(maps_list) > 0:
 		return json.dumps(maps_list)
 
+def get_map_list(package):
+        list_ = package['resources']
+        package_id = package['id']
+
+        maps_list = []
+
+        for item in list_:
+         	##log.info('::::::::::::::::::::::::::: %r', item)
+                format = item.get('format')
+                if format == 'map':
+                        resource = {
+				'package_id': package_id,
+                                'id':     item.get('id'),
+                                'url':    item.get('url'),
+                                'name':   item.get('name'),
+                                'format': format,
+				'map_config': item.get('map_data')
+                        }
+
+                        maps_list.append(resource)
+
+        if len(maps_list) > 0:
+		return json.dumps(maps_list)

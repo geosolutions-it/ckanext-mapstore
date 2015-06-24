@@ -90,6 +90,14 @@
 				<a id="{{ package.id }}" onClick="javascript:basket_utils.preparePreviewURL({{ mapstore_map_list }});" class="label basket-label-preview"><i class="icon-map-marker"></i><spam id="ckanext-mapstore-previewOnMap"> Preview on Map</spam></a>
 			</li>
 		{% endif %}
+		
+	    {% set map_list = h.get_map_list(package) %}
+		
+		{% if map_list %}
+			<li>
+				<a id="{{ package.id }}" onClick="javascript:basket_utils.preparePreviewURL({{ map_list }});" class="label basket-label-preview"><i class="icon-map-marker"></i><spam id="ckanext-mapstore-previewOnMap"> Preview on Map</spam></a>
+			</li>
+		{% endif %}
 
 		</ul>
 	{% endif %}

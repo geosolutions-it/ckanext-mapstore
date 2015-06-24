@@ -18,8 +18,10 @@ var basket_utils = {
 		
 		var storeValue;
 		if(singlePreview === true){
+			// From direct WMS preview button
 			storeValue = this.readStore("previewList");
 		}else{
+			// From basket WMS preview list
 			storeValue = this.readStore("layersList");
 		}
 		
@@ -38,36 +40,76 @@ var basket_utils = {
 	
 	/**
 	 * Prepare the URL for mapstore preview (maps from geostore)
+	 * resource_list - A list of geostore or map resources.
 	 */
 	preparePreviewURL: function(resource_list){		
-		for(var i=0; i<resource_list.length; i++){
-			var resource = resource_list[i];
-			var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
-			
-			var URLParams = this.buildUrlParams("simple", capabilitiesUrl, resource.name, resource.url);			
-			var href = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + URLParams.join("&");
-			
-			window.open(href);
+		// ///////////////////////////////////////////////////////////////////////
+		// TODO: Provide a way to select from a list the geostore or map resources 
+		//       to use for preview, as provided for WMS resources 
+		//       (use radio buttons).
+		// ///////////////////////////////////////////////////////////////////////
+		
+		// ////////////////////////////////////////////////////////////
+		// This uses only the first array element even if the dataset 
+		// can contain multiple occurrence of these resources
+		// ////////////////////////////////////////////////////////////
+		if(resource_list.length >= 0){
+			var resource = resource_list[0];	
+			var URLParams = this.buildUrlParams("generic", resource);			
+						
+			if(resource.format == "mapstore"){
+				var href = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + URLParams.join("&");
+				window.open(href);
+			}else if(resource.format == "map"){
+				this.eraseStore("previewList");
+				
+				var key = this.prepareKey(resource);
+				this.preparePreviewOnMap(key);
+
+				this._previewOnMap(URLParams);
+			}
 		}
 	},
 	
 	/**
 	 * Build the single store for resource
 	 */
-	prepareKey: function(resource){
-		var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
-		var keyValue = "{\"verified\":\"" + resource.verified + "\", \"package_id\":\"" + resource.package_id + "\", \"id\":\"" + resource.id + "\", \"layer\":\"" + resource.name + "\", \"wms\":\"" + capabilitiesUrl + "\", \"pname\":\"" + resource.pname + "\", \"format\":\"" + resource.format + "\"}";
-		keyValue = escape(keyValue);
-		
+	prepareKey: function(resource){	
+		var keyValue;		
+		if(resource.format == "map"){	
+			//
+			// Preparing key for the direct mapconfig injection case
+			//
+			/*keyValue = "{\"package_id\":\"" + resource.package_id + 
+			"\", \"id\":\"" + resource.id + 
+			"\", \"pname\":\"" + resource.pname + 
+			"\", \"format\":\"" + resource.format +
+			"\", \"map_config\":" + resource.map_config + 
+			"}";*/
+			keyValue = "{\"map_config\":" + resource.map_config + "}";			
+		}else{
+			//
+			// Preparing key for the WMS/WMTS format case
+			//
+			var capabilitiesUrl = this.getCapabilitiesURL(resource.url);
+			keyValue = "{\"verified\":\"" + resource.verified + 
+			"\", \"package_id\":\"" + resource.package_id + 
+			"\", \"id\":\"" + resource.id + 
+			"\", \"layer\":\"" + resource.name + 
+			"\", \"wms\":\"" + capabilitiesUrl + 
+			"\", \"pname\":\"" + resource.pname + 
+			"\", \"format\":\"" + resource.format + 
+			"\"}";
+		}
+
+		keyValue = escape(keyValue);		
 		return keyValue;		
 	},
 	
 	/**
 	 * Add a new element to teh basket div
 	 */	
-	addToBasket: function(resource_list, package_id){
-		//var styleChanged = false;
-		
+	addToBasket: function(resource_list, package_id){		
 		// //////////////////////////////////////////
 		// Allow the user to select resources he want
 		// to add to the basket if there are multiple
@@ -265,7 +307,7 @@ var basket_utils = {
 					this.preparePreviewOnMap(key);		
 				}
 				
-				this._previewOnMap();
+				this._previewOnMap(this.buildUrlParams("preview"));
 				
 			    $('.custom-modal').modal('hide');
 				$('.custom-modal').remove();
@@ -275,16 +317,14 @@ var basket_utils = {
 			var key = this.prepareKey(resource);
 			this.preparePreviewOnMap(key);
 
-			this._previewOnMap();			
+			this._previewOnMap(this.buildUrlParams("preview"));			
 		}					
 	},
 	
 	/**
 	 * Prepares the URL before performing the request to MapStore
 	 */	
-	_previewOnMap: function(){
-		var URLParams = this.buildUrlParams("preview");
-		
+	_previewOnMap: function(URLParams){		
 		var href = preview_config.mapStoreBaseURL + preview_config.composerPath + "?" + URLParams.join("&");
 		
 		if(preview_config.storageMethod === "cookies"){
@@ -313,10 +353,8 @@ var basket_utils = {
 	 * Parse the WMS GetCapabilities URL 
 	 */
 	getCapabilitiesURL: function(url){
-		var wmsUrl, capabilitiesUrl;
-		if(url.indexOf('geostore') == -1){
-			capabilitiesUrl = mapstore_utils.getCapabilitiesUrl(url);
-		}
+		var capabilitiesUrl;
+		capabilitiesUrl = mapstore_utils.getCapabilitiesUrl(url);
 		
 		return capabilitiesUrl;
 	},
@@ -324,21 +362,20 @@ var basket_utils = {
 	/**
 	 * Build URL params for preview URLs
 	 */	
-	buildUrlParams: function(template, capabilitiesUrl, name, url){
+	buildUrlParams: function(template, resource){
 		var URLParams = [];		
 		
-		URLParams.push("locale=" + this.locale);                // TODO: link to the real Ckan locale ???
+		URLParams.push("locale=" + this.locale); 
 		
-		if(template == "simple"){
-			if(capabilitiesUrl && name){
-				URLParams.push("wmsurl=" + capabilitiesUrl);
-				URLParams.push("layName=" + name);
-			}else{
+		if(template == "generic"){
+			if(resource.format == "mapstore"){
 				var pattern = /(.+:\/\/)?([^\/]+)(\/.*)*/i;
-				var mHost = pattern.exec(url);
+				var mHost = pattern.exec(resource.url);
 				
 				URLParams.push("gsturl=" + encodeURIComponent(mHost[1] + mHost[2] + "/geostore/rest/"));
-				URLParams.push("mapId=" + url.split("data/")[1]);
+				URLParams.push("mapId=" + resource.url.split("data/")[1]);
+			}else if(resource.format == "map" && preview_config.storageMethod === "cookies"){	
+				URLParams.push("useCookies=previewList");
 			}
 		}else if(template == "preview" && preview_config.storageMethod === "cookies"){
 			URLParams.push("useCookies=previewList");
@@ -642,6 +679,7 @@ var basket_utils = {
 
     /**
 	 * Creates the Store
+	 * days - Used for cookies, specifies the validity period of the cookie.
 	 */
 	createStore: function(name, value, days) {
 		if(preview_config.storageMethod === 'cookies'){

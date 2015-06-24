@@ -24,7 +24,20 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			
 			var resource = preload_resource;
 			
-			if(package_wms_list){
+			var keyValue;
+			if(resource.format == "map"){
+				keyValue = "{\"package_id\":\"" + resource.package_id + 
+					"\", \"id\":\"" + resource.id + 
+					"\", \"pname\":\"" + resource.pname + 
+					"\", \"format\":\"" + resource.format + 
+					"\", \"map_config\":" + resource.map_data + 
+					"}";
+				keyValue = escape(keyValue);
+			}else if(package_wms_list){
+			    // //////////////////////////////////////////////////////////
+				// Provides support for Time Intervals 
+				// (if available for the WMS resource) in embedded preview
+				// //////////////////////////////////////////////////////////
 				for(var i=0; i<package_wms_list.length; i++){
 					var item = package_wms_list[i];
 					if(item.id == resource.id && item.time_interval){
@@ -32,40 +45,88 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 					}
 				}	
 			}
-	
 			
 			var url = resource.url;
 			
 			var capabilitiesUrl = this.getCapabilitiesURL(url);
 			
 			$("#mapstore-preview").empty();
-			
-			// //////////////////////////////////////////////////
-			// Build the Iframe to show the MapStore Viewer
-			// //////////////////////////////////////////////////
+	
 			var config = preview_config;
 			var mapstoreBaseURL = config.mapStoreBaseURL;
 			
-			// ////////////////////////////////////////////
-			// Set URL in basic show map button (composer)
-			// ////////////////////////////////////////////
+			// ////////////////////////////////////////////////////
+			// Set URL used for the preview map button (composer)
+			// ////////////////////////////////////////////////////
 			var composerURLParams = this.buildUrlParams("composer", capabilitiesUrl, resource, url);
 			var src =  "'" + mapstoreBaseURL + config.composerPath + "?" + composerURLParams.join("&") + "'";
-			$("#mapstore-preview").append($("<div class='show-btn'><a id='showInTab' class='show show-primary' href=" + src + " target='_blank'>" + this.msgs.showMapInNewTabBtn + "</a><br/></div>"));
 			
+			mp = this;
+			if(keyValue){
+				$("#mapstore-preview").append($("<div id=\"previewButton\" class='show-btn'><a id='showInTab' class='show show-primary' onClick=\"javascript:mp.showComposer(" + src + ", '" + keyValue + "')\" target='_blank'>" + this.msgs.showMapInNewTabBtn + "</a><br/></div>"));
+			}else{
+				$("#mapstore-preview").append($("<div class='show-btn'><a id='showInTab' class='show show-primary' href=" + src + " target='_blank'>" + this.msgs.showMapInNewTabBtn + "</a><br/></div>"));
+			}
+					
 		    // ///////////////////////////////////////////////////////
 			// Set URL for the embedded preview and build the iframe
 			// ///////////////////////////////////////////////////////
 			var viewerURLParams = this.buildUrlParams("viewer", capabilitiesUrl, resource, url);
 			src = mapstoreBaseURL + config.viewerPath + "?" + viewerURLParams.join("&");
 						
-			$("#mapstore-preview").append($("<iframe></iframe>").attr("id", "mapstore-ifame"));
+			// /////////////////////////////////////////////////////////////////////////////////
+			// If the resource contains an entire map config we prepare a FORM hidden element 
+			// to performa a POST request and inject the map config into MapStore
+			// /////////////////////////////////////////////////////////////////////////////////
+			if(resource.map_data){							
+				var previewButton = $("#previewButton");
+				
+				var msForm = $("#msForm");
+				if(msForm){
+					msForm.remove();
+				}
+				
+				previewButton.append($("<form id=\"mapstore-ifame-form\" target=\"mapstore-ifame-name\" method=\"post\" action=\"" + src + "\"><input type=\"hidden\" name=\"data\" value=\"" + keyValue + "\"></form>"));
+			}		
+			
+		    // //////////////////////////////////////////////////
+			// Build the Iframe to show the MapStore Viewer
+			// //////////////////////////////////////////////////
+			$("#mapstore-preview").append($("<iframe name=\"mapstore-ifame-name\"></iframe>").attr("id", "mapstore-ifame"));
 			$("#mapstore-ifame").attr("style", "border: none;");
 			$("#mapstore-ifame").attr("height", "500");
 			$("#mapstore-ifame").attr("width", "100%");
-			$("#mapstore-ifame").attr("src", src);
+			
+			if(resource.map_data){
+				msForm = $("#mapstore-ifame-form");
+				msForm.submit();
+			}else{
+				$("#mapstore-ifame").attr("src", src);
+			}
         },
 		
+		/**
+		 * Perform the POST http request to show the advanced preview. 
+		 */
+		showComposer: function(src, storeValue){
+			var previewButton = $("#previewButton");
+			
+			var msForm = $("#msForm");
+			if(msForm){
+				msForm.remove();
+			}
+			
+			previewButton.append($("<form id=\"msForm\" action='' target=\"submission\" onsubmit=\"window.open('',this.target);return true;\" method=\"post\"><input type=\"hidden\" name=\"data\" value=\"" + storeValue + "\"></form>"));
+			
+			msForm = $("#msForm");
+			msForm.attr("action", src);		
+			
+			msForm.submit();
+		},
+		
+		/**
+		 * Sets locale for internal components
+		 */
 		setI18N: function(locale){
 			this.msgs = eval("this.options.i18n." + locale);
 			this.locale = locale;
@@ -83,6 +144,10 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			return capabilitiesUrl;
 		},
 	
+	    /**
+		 * Build an array of url params to use for mapstore
+		 * template - denote the types of params to use for a specific mapstore template
+		 */
 		buildUrlParams: function(template, capabilitiesUrl, resource, url){
 			var config = preview_config;
 			var URLParams = [];		
@@ -90,7 +155,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 			URLParams.push("locale=" + this.locale);                // TODO: link to the Ckan locale ???
 			
 			if(template == "viewer" || template == "composer"){
-				if(capabilitiesUrl && resource){
+				if(resource.format == "wms" || resource.format == "wmts"){
 					URLParams.push("wmsurl=" + capabilitiesUrl);
 					URLParams.push("layName=" + resource.name);
 					URLParams.push("format=" + resource.format);
@@ -109,7 +174,7 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 							}
 						}
 					}	
-				}else{
+				}else if(resource.format == "mapstore"){
 					var pattern = /(.+:\/\/)?([^\/]+)(\/.*)*/i;
 					var mHost = pattern.exec(url);
 					
@@ -122,6 +187,9 @@ this.ckan.module('mapstorepreview', function (jQuery, _) {
 				URLParams.push("langSelector=false");
 				URLParams.push("config=" + config.viewerConfigName);
 				
+				// /////////////////////////////////////////////////////////////////
+				// Check for temporal extent instant (see above and h.get_wms_list)
+				// /////////////////////////////////////////////////////////////////
 				if(resource.timeInterval){
 					URLParams.push("timeInterval=" + resource.timeInterval);
 				}
