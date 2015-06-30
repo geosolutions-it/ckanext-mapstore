@@ -27,3 +27,30 @@
   margin-bottom: 0;
   border-top: 30px solid #ffffff;
 }
+
+.label[data-format=wms] {
+    background-color: #adc717;
+}
+.format-label[data-format=wms],
+.format-label[data-format*=wms] {
+    background: url("../base/images/gis-resources-sprite-icons.png") no-repeat 0 0;
+    background-position: -32px -62px;
+}
+
+.label[data-format=wmts] {
+    background-color: #3333ff;
+}
+.format-label[data-format=wmts],
+.format-label[data-format*=wmts] {
+    background: url("../base/images/gis-resources-sprite-icons.png") no-repeat 0 0;
+    background-position: -162px -62px;
+}
+
+.label[data-format=mapstore] {
+    background-color: #337794;
+}
+.format-label[data-format=mapstore],
+.format-label[data-format*=mapstore] {
+    background: url("../base/images/gis-resources-sprite-icons.png") no-repeat 0 0;
+    background-position: -194px -62px;
+}
