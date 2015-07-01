@@ -6,7 +6,11 @@
 {% block scripts %}
   <script>
     var preload_resource = {{ h.literal(c.resource_json) }};
-    var package_wms_list = {{ h.literal(h.get_wms_list(c.package)) }};
+
+    var package_wms_list;
+    if(typeof {{ h.literal(h.get_wms_list(c.package)) }} !== 'undefined'  ){
+    	package_wms_list = {{ h.literal(h.get_wms_list(c.package)) }};
+    }
   </script>
 {% endblock %}
 
